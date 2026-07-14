@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h2 class="mb-4">{{ title }}</h2>
+
+    <div class="alert alert-danger">
+        Are you sure you want to delete the post:
+        <strong>{{ post.title }}</strong>?
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button class="btn btn-danger">Yes, delete</button>
+        <a href="{{ post.get_absolute_url }}" class="btn btn-secondary">Cancel</a>
+    </form>
+
+</div>
+{% endblock %}

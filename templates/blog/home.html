@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<script src="{% static 'js/slider.js' %}"></script>
+
+<div class="container mt-4">
+
+    <!-- HERO SECTION -->
+    <div class="hero-article mb-5">
+       {% if hero_post.featured_image %}
+         <img src="{{ hero_post.featured_image.url }}" alt="{{ hero_post.title }}">
+       {% endif %}
+        <div class="hero-text">
+            <h1>{{ hero_post.title }}</h1>
+            <p>{{ hero_post.content|truncatewords:25 }}</p>
+        </div>
+    </div>
+
+    <!-- BULLET LINKS -->
+    <ul class="bullet-links mb-4">
+        {% for link in bullet_links %}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <!-- MATCH BLOCK -->
+    <div class="match-block mb-5">
+        <h2>2026 FIFA World Cup</h2>
+        <div class="match-row">
+            <div class="team">
+                <img src="{{ france_flag.url }}" alt="France">
+                <span>France</span>
+            </div>
+            <div class="match-time">{{ match_time }}</div>
+            <div class="team">
+                <img src="{{ morocco_flag.url }}" alt="Morocco">
+                <span>Morocco</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDER -->
+    <div id="post-slider" class="mb-5">
+        {% for post in slider_posts %}
+            <div class="post-slide {% if forloop.first %}active{% endif %}">
+                {% if post.featured_image %}
+                  <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+                {% endif %}
+                <h2>{{ post.title }}</h2>
+                <p>{{ post.content|truncatewords:20 }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- FEATURED ARTICLE -->
+    {% if featured_post %}
+    <div class="card mb-5 featured-card">
+        {% if featured_post.featured_image %}
+            <img src="{{ featured_post.featured_image.url }}" class="card-img-top">
+        {% endif %}
+        <div class="card-body">
+            <h2>{{ featured_post.title }}</h2>
+            <p class="text-muted">
+                By <a href="{% url 'author_posts' featured_post.author.username %}">{{ featured_post.author }}</a>
+                | {{ featured_post.created_at|date:"M d, Y" }}
+            </p>
+            <p>{{ featured_post.content|truncatewords:40|safe }}</p>
+            <a href="{{ featured_post.get_absolute_url }}" class="btn btn-primary">Read More</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ARTICLE GRID -->
+    <div class="article-grid mb-5">
+        {% for post in worldcup_posts %}
+        <div class="article-card">
+            {% if post.featured_image %}
+               <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+            {% endif %}
+            <h3>{{ post.title }}</h3>
+            <p>{{ post.content|truncatewords:15 }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+
+        <!-- MAIN CONTENT -->
+        <div class="col-lg-8">
+
+            {% for post in page_obj %}
+            <div class="card mb-4 news-card">
+                {% if post.featured_image %}
+                    <img src="{{ post.featured_image.url }}" class="card-img-top">
+                {% endif %}
+                <div class="card-body">
+                    <h4>{{ post.title }}</h4>
+                    <p class="text-muted">
+                        By <a href="{% url 'author_posts' post.author.username %}">{{ post.author }}</a>
+                        | {{ post.created_at|date:"M d, Y" }}
+                    </p>
+                    <p>{{ post.content|truncatewords:25|safe }}</p>
+                    <p>👁 {{ post.views }} &nbsp;&nbsp; ❤️ {{ post.likes.count }}</p>
+                    <a href="{{ post.get_absolute_url }}" class="btn btn-primary">Read More</a>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar-glass">
+            <h5>🔥 Popular Posts</h5>
+            {% for post in popular_posts %}
+                <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+            {% endfor %}
+        </div>       
+
+        <div class="sidebar-glass">
+            <h5>📁 Categories</h5>
+            {% for category in categories %}
+                <a href="{% url 'category_posts' category.slug %}">{{ category.name }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="sidebar-box">
+            <h5>🏷 Tags</h5>
+            {% for tag in tags %}
+                <a href="{% url 'tag_posts' tag.slug %}" class="btn btn-outline-secondary btn-sm mb-1">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

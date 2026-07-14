@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card p-3">
+
+    <h2>{{ post.title }}</h2>
+
+    <p class="small-text">
+        Views: {{ post.views }} |
+        Likes: {{ post.likes.count }}
+    </p>
+
+    {% if post.featured_image %}
+        <img
+            src="{{ post.featured_image.url }}"
+            class="img-fluid mb-3"
+            alt="{{ post.title }}">
+    {% endif %}
+
+    <div>
+        {{ post.content|safe }}
+    </div>
+
+    <hr>
+
+    <div class="d-flex gap-2">
+
+        <!-- HTMX Like Button -->
+        <div id="like-section">
+
+            <button
+                hx-get="{% url 'like_post' post.slug %}"
+                hx-target="#like-section"
+                hx-swap="outerHTML"
+                class="btn btn-danger btn-sm">
+
+                ❤️ {{ post.likes.count }}
+
+            </button>
+
+        </div>
+
+        <!-- Bookmark -->
+        <a
+            class="btn btn-warning btn-sm"
+            href="{% url 'bookmark_post' post.slug %}">
+
+            🔖 Bookmark
+
+        </a>
+
+    </div>
+
+</div>
+
+<hr>
+
+<h4>Comments</h4>
+
+{% for comment in comments %}
+
+    <div class="card p-2 mb-2">
+
+        <strong>{{ comment.user }}</strong>
+
+        <p class="mb-0">
+            {{ comment.content }}
+        </p>
+
+    </div>
+
+{% empty %}
+
+    <p>No comments yet.</p>
+
+{% endfor %}
+
+{% if user.is_authenticated %}
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button
+            class="btn btn-success btn-sm">
+
+            Post Comment
+
+        </button>
+
+    </form>
+
+{% else %}
+
+    <p>
+        <a href="{% url 'login' %}">
+            Login
+        </a>
+        to leave a comment.
+    </p>
+
+{% endif %}
+
+{% endblock %}

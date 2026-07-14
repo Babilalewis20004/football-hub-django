@@ -1,0 +1,27 @@
+<div id="like-section">
+
+<button
+hx-get="{% url 'like_post' post.slug %}"
+hx-target="#like-section"
+hx-swap="outerHTML"
+class="btn btn-danger">
+
+❤️ {{ post.likes.count }}
+
+</button>
+
+</div>
+
+<div id="bookmark-section">
+
+<button
+hx-get="{% url 'bookmark_post' post.slug %}"
+hx-target="#bookmark-section"
+hx-swap="outerHTML"
+class="btn btn-warning">
+
+🔖 Save
+
+</button>
+
+</div>

@@ -1,0 +1,142 @@
+{% load static %}
+
+<footer class="footer mt-5">
+
+    <div class="container">
+
+        <div class="row gy-4">
+
+            <!-- Brand -->
+            <div class="col-lg-4 col-md-6">
+
+                <h3 class="footer-logo">
+                    <i class="bi bi-trophy-fill text-warning"></i>
+                    Football Hub
+                </h3>
+
+                <p class="footer-text">
+                    Football Hub is your trusted destination for the latest football news,
+                    match analysis, transfer updates, fixtures and opinions from leagues
+                    around the world.
+                </p>
+
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-lg-2 col-md-6">
+
+                <h5>Quick Links</h5>
+
+                <ul class="footer-links">
+
+                    <li><a href="{% url 'home' %}">Home</a></li>
+
+                    <li><a href="#">News</a></li>
+
+                    <li><a href="#">About</a></li>
+
+                    <li><a href="#">Contact</a></li>
+
+                </ul>
+
+            </div>
+
+        <!-- Latest News -->
+<div class="col-lg-3 col-md-6">
+
+    <h5>Latest News</h5>
+
+    <ul class="footer-links">
+
+        <li><a href="#">Match Reports</a></li>
+
+        <li><a href="#">Transfer News</a></li>
+
+        <li><a href="#">Player Interviews</a></li>
+
+        <li><a href="#">Match Predictions</a></li>
+
+        <li><a href="#">League Standings</a></li>
+
+    </ul>
+
+</div>
+
+            <!-- Newsletter -->
+            <div class="col-lg-3 col-md-6">
+
+                <h5>Newsletter</h5>
+
+                <p class="footer-text">
+
+                    Subscribe to receive the latest football news.
+
+                </p>
+
+                <form>
+
+                    <div class="input-group">
+
+                        <input
+                            type="email"
+                            class="form-control"
+                            placeholder="Your email">
+
+                        <button
+                            class="btn btn-warning"
+                            type="submit">
+
+                            Subscribe
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+                <div class="social-icons mt-4">
+
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+
+                    <a href="#"><i class="bi bi-twitter-x"></i></a>
+
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+
+                    <a href="#"><i class="bi bi-youtube"></i></a>
+
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <hr>
+
+    <div class="container">
+
+        <div class="footer-bottom">
+
+            <p>
+
+                © {% now "Y" %} Football Hub.
+                All Rights Reserved.
+
+            </p>
+
+            <p>
+
+                Developed with
+                ❤️
+                using Django & PostgreSQL.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>

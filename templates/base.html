@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Football Hub</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    
+
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+
+    <div class="container">
+
+        <a class="navbar-brand fw-bold fs-3"
+           href="{% url 'home' %}">
+            FootballHub
+        </a>
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav">
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+        <div
+            class="collapse navbar-collapse"
+            id="navbarNav">
+
+            <!-- Left Menu -->
+
+            <ul class="navbar-nav me-auto">
+
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}">
+            HOME
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link"
+           href="{% url 'category_posts' 'champions-league' %}">
+            CHAMPIONS LEAGUE
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link"
+           href="{% url 'category_posts' 'la-liga' %}">
+            LA LIGA
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link"
+           href="{% url 'category_posts' 'predictions' %}">
+            PREDICTIONS
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link"
+           href="{% url 'category_posts' 'premier-league' %}">
+            PREMIER LEAGUE
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link"
+           href="{% url 'category_posts' 'serie-a' %}">
+            SERIE A
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link"
+           href="{% url 'category_posts' 'transfers' %}">
+            TRANSFERS
+        </a>
+    </li>
+
+</ul>
+
+            <!-- Right Menu -->
+
+<div class="d-flex gap-2 align-items-center">
+
+    <form action="{% url 'search' %}" method="GET" class="d-flex" style="width: 150px;">
+        <input 
+            type="text" 
+            name="q" 
+            class="form-control form-control-sm me-2" 
+            placeholder="Search..."
+        >
+        <button class="btn btn-sm btn-outline-light" type="submit">Go</button>
+    </form>
+
+    <button id="darkModeBtn" class="btn btn-sm btn-outline-light">
+        🌙 Dark
+    </button>
+
+    {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-light">Dashboard</a>
+        <a href="{% url 'saved_posts' %}" class="btn btn-sm btn-warning">Saved</a>
+
+        <form action="{% url 'logout' %}" method="POST" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-link nav-link p-0" style="border:none;">
+                Logout
+            </button>
+        </form>
+
+    {% else %}
+        <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login</a>
+        <a href="{% url 'register' %}" class="btn btn-sm btn-success">Register</a>
+    {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>
+
+<div class="container mt-4">
+
+    {% block content %}
+    {% endblock %}
+
+</div>
+
+{% include 'blog/includes/footer.html' %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const btn = document.getElementById('darkModeBtn');
+
+    function updateButton() {
+
+        if (document.body.classList.contains('light-mode')) {
+            btn.innerHTML = '🌙 Dark';
+        } else {
+            btn.innerHTML = '☀️ Light';
+        }
+
+    }
+
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+    }
+
+    updateButton();
+
+    btn.addEventListener('click', function () {
+
+        document.body.classList.toggle('light-mode');
+
+        if (document.body.classList.contains('light-mode')) {
+            localStorage.setItem('theme', 'light');
+        } else {
+            localStorage.setItem('theme', 'dark');
+        }
+
+        updateButton();
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

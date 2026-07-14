@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>
+
+{{ author.username }}
+
+</h1>
+
+{% for post in posts %}
+
+<div class="card mb-3">
+
+<div class="card-body">
+
+<h4>{{ post.title }}</h4>
+
+<a
+href="{{ post.get_absolute_url }}"
+class="btn btn-primary">
+
+Read More
+
+</a>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+{% endblock %}
+<h3>Popular Posts</h3>
+
+<ul>
+    {% for post in popular_posts %}
+        <li>
+            <a href="{{ post.get_absolute_url }}">
+                {{ post.title }}
+            </a>
+            ({{ post.views }} views)
+        </li>
+    {% endfor %}
+</ul>

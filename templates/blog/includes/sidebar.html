@@ -1,0 +1,43 @@
+<div class="sidebar">
+
+    <!-- Categories -->
+    <h4>Categories</h4>
+    <ul>
+        {% for category in sidebar_categories %}
+            <li>
+                <a href="{% url 'category_posts' category.slug %}">
+                    {{ category.name }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <!-- Trending Posts -->
+    <h4>Trending</h4>
+    <ul>
+        {% for post in sidebar_trending_posts %}
+            <li>
+                <a href="{% url 'post_detail' post.slug %}">
+                    {{ post.title }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <!-- Latest Posts -->
+    <h4>Latest</h4>
+    <ul>
+        {% for post in sidebar_latest_posts %}
+            <li>
+                <a href="{% url 'post_detail' post.slug %}">
+                    {{ post.title }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+</div>

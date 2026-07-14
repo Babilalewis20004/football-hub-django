@@ -1,0 +1,405 @@
+/* ==========================================================
+   GLOBAL
+========================================================== */
+
+body{
+    background:#180f2a;
+    color:#ffffff;
+    font-family:Arial, Helvetica, sans-serif;
+    transition:all .3s ease;
+}
+
+a{
+    text-decoration:none;
+}
+
+img{
+    max-width:100%;
+}
+
+/* ===========================
+   NAVIGATION MENU
+=========================== */
+
+.navbar{
+    background:#0b1f3a !important;
+    padding:10px 0;
+}
+
+.navbar-brand{
+    color:#ffffff !important;
+    font-size:2rem;
+    font-weight:700;
+    margin-right:30px;
+}
+
+.nav-link{
+    color:#ffffff !important;
+    font-size:0.7rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    padding:0.5rem 0.7rem !important;
+}
+
+.nav-link:hover{
+    color:#ffc107 !important;
+}
+
+.navbar-nav .nav-item{
+    margin-right:6px;
+}
+
+/* ==========================================================
+   HERO SECTION (OLD)
+========================================================== */
+
+.hero{
+    background:
+        linear-gradient(rgba(0,0,0,.75), rgba(0,0,0,.75)),
+        url('https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a');
+    background-size:cover;
+    background-position:center;
+    padding:120px 40px;
+    border-radius:12px;
+    text-align:center;
+    color:white;
+    margin-bottom:60px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+.hero h1{
+    font-size:3rem;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+.hero p{
+    font-size:1.2rem;
+    color:#f8f9fa;
+}
+
+/* ==========================================================
+   ESPN HERO ARTICLE (NEW)
+========================================================== */
+
+.hero-article{
+    display:flex;
+    gap:20px;
+    background:#1f2937;
+    border-radius:12px;
+    overflow:hidden;
+    margin-bottom:40px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    transition:transform .3s ease, box-shadow .3s ease;
+}
+
+.hero-article:hover{
+    transform:translateY(-6px);
+    box-shadow:0 15px 40px rgba(0,0,0,.45);
+}
+
+.hero-article img{
+    width:45%;
+    height:260px;
+    object-fit:cover;
+}
+
+.hero-text{
+    padding:20px;
+}
+
+.hero-text h1{
+    font-size:2rem;
+    color:#66fcf1;
+}
+
+.hero-text p{
+    color:#cbd5e1;
+}
+
+/* ==========================================================
+   BULLET LINKS (NEW)
+========================================================== */
+
+.bullet-links{
+    list-style:none;
+    padding:0;
+    margin-bottom:30px;
+}
+
+.bullet-links li{
+    margin:8px 0;
+}
+
+.bullet-links a{
+    color:#45a29e;
+    font-weight:600;
+    transition:color .2s ease;
+}
+
+.bullet-links a:hover{
+    color:#66fcf1;
+}
+
+/* ==========================================================
+   MATCH BLOCK (NEW)
+========================================================== */
+
+.match-block{
+    background:#1f2937;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:40px;
+}
+
+.match-block h2{
+    color:#66fcf1;
+    margin-bottom:15px;
+}
+
+.match-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.team{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.team img{
+    width:40px;
+    height:25px;
+    object-fit:cover;
+}
+
+.match-time{
+    font-size:1.4rem;
+    font-weight:bold;
+}
+
+/* ==========================================================
+   ARTICLE GRID (NEW)
+========================================================== */
+
+.article-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:20px;
+    margin-bottom:40px;
+}
+
+.article-card{
+    background:#1f2937;
+    border-radius:12px;
+    overflow:hidden;
+    transition:transform .3s ease, box-shadow .3s ease;
+}
+
+.article-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 15px 35px rgba(0,0,0,.35);
+}
+
+.article-card img{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+}
+
+.article-card h3{
+    font-size:1.2rem;
+    margin:10px;
+    color:#66fcf1;
+}
+
+.article-card p{
+    margin:0 10px 10px;
+    color:#cbd5e1;
+}
+
+/* ==========================================================
+   SLIDER (NEW)
+========================================================== */
+
+#post-slider{
+    width:100%;
+    height:320px;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:40px;
+}
+
+.post-slide{
+    position:absolute;
+    width:100%;
+    height:100%;
+    opacity:0;
+    transform:translateX(20px);
+    transition:opacity 1s ease-in-out, transform 1s ease-in-out;
+}
+
+.post-slide.active{
+    opacity:1;
+    transform:translateX(0);
+}
+
+.post-slide img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:#000;
+    border-radius:8px;
+}
+
+.post-slide h2{
+    position:absolute;
+    bottom:20px;
+    left:20px;
+    color:white;
+    text-shadow:0 2px 6px rgba(0,0,0,.7);
+}
+
+/* ==========================================================
+   CARDS (YOUR ORIGINAL)
+========================================================== */
+
+.card{
+    background:#1f2937;
+    color:white;
+    border:none;
+    border-radius:12px;
+    overflow:hidden;
+    transition:.3s;
+    margin-bottom:25px;
+}
+
+.card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 15px 35px rgba(0,0,0,.35);
+}
+
+.card img{
+    border-top-left-radius:12px;
+    border-top-right-radius:12px;
+}
+
+.card-body{
+    padding:20px;
+}
+
+.post-title{
+    font-size:1.35rem;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.small-text{
+    font-size:.9rem;
+    color:#cbd5e1;
+}
+
+/* ==========================================================
+   SIDEBAR (YOUR ORIGINAL)
+========================================================== */
+
+.sidebar-box{
+    background:#1f2937;
+    color:white;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,.2);
+}
+
+.sidebar-box h5{
+    margin-bottom:15px;
+    font-weight:bold;
+}
+
+.sidebar-box a{
+    color:#ffffff;
+}
+
+.sidebar-box a:hover{
+    color:#0d6efd;
+}
+
+.sidebar-horizontal {
+    display: flex;
+    gap: 20px;
+}
+.sidebar-horizontal .sidebar-box {
+    flex: 1;
+}
+
+.sidebar-glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.sidebar-glass:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+}
+
+.sidebar-glass h5 {
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #66fcf1;
+}
+
+.sidebar-glass a {
+    color: #ffffff;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.sidebar-glass a:hover {
+    color: #66fcf1;
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media (max-width:900px){
+    #post-slider{ height:260px; }
+}
+
+@media (max-width:768px){
+
+    .hero{
+        padding:70px 20px;
+    }
+
+    .hero h1{
+        font-size:2.2rem;
+    }
+
+    .hero-article{
+        flex-direction:column;
+    }
+
+    .hero-article img{
+        width:100%;
+        height:200px;
+    }
+
+    #post-slider{
+        height:220px;
+    }
+}
+
+

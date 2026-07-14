@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>
+Results for "{{ query }}"
+</h2>
+
+{% for post in results %}
+
+<div class="card mb-3">
+
+<div class="card-body">
+
+<h4>{{ post.title }}</h4>
+
+<a
+href="{{ post.get_absolute_url }}"
+class="btn btn-primary">
+
+Read
+
+</a>
+
+</div>
+
+</div>
+
+{% empty %}
+
+<p>No results found.</p>
+
+{% endfor %}
+
+{% endblock %}

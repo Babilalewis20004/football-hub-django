@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>Dashboard</h1>
+
+<h3>My Posts</h3>
+
+{% for post in user_posts %}
+{{ post.title }}<br>
+{% endfor %}
+
+<hr>
+
+<h3>Bookmarks</h3>
+
+{% for bookmark in bookmarks %}
+{{ bookmark.post.title }}<br>
+{% endfor %}
+
+{% endblock %}
