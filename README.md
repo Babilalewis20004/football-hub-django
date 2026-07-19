@@ -207,6 +207,46 @@ docs/
 
 ---
 
+/* ========================================================================
+   FOOTBALL HUB — MASTER STYLESHEET
+   ------------------------------------------------------------------------
+   This project currently uses a SINGLE stylesheet (style.css).
+
+   OPTIONAL MODULAR ARCHITECTURE (recommended for scaling):
+   --------------------------------------------------------
+   /css/core/
+       variables.css      → global color palette, shadows, gradients
+       global.css         → body, typography, resets
+       layout.css         → containers, spacing, responsive grid
+       utilities.css      → reusable helpers (glass, glow, spacing)
+
+   /css/components/
+       navbar.css         → navigation bar styles
+       sidebar.css        → sidebar glass cards
+       slider.css         → homepage slider
+       hero.css           → homepage hero grid
+       match-block.css    → match fixtures block
+       bullet-links.css   → bullet link list
+       article-card.css   → article cards
+
+   /css/pages/
+       home.css           → homepage layout
+       post.css           → post detail page
+       category.css       → category listing page
+       dashboard.css      → user dashboard
+       login.css          → login page
+       register.css       → register page
+
+   HOW TO USE THIS FILE:
+   ---------------------
+   - All styles are currently combined here.
+   - Each section below is labeled with its modular category.
+   - If you ever want to split into modules, simply copy each section
+     into the corresponding file listed above.
+
+   ======================================================================== */
+
+
 ## 👨‍💻 Author
 
 **Your Name**
