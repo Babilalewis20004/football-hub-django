@@ -247,6 +247,56 @@ docs/
    ======================================================================== */
 
 
+   
+### Why modular CSS?
+- Easier to maintain  
+- Faster debugging  
+- Cleaner separation of concerns  
+- Scales better for large projects  
+- Matches professional design‑system architecture  
+
+---
+
+## 🧩 How `style.css` Is Structured Today
+
+To prepare for future modularisation, `style.css` is organised into clearly labelled sections:
+
+### **CORE**
+- Global resets  
+- Body styles  
+- Typography  
+- Layout helpers  
+- Animations  
+
+### **COMPONENTS**
+- Navbar  
+- Sidebar  
+- Hero grid  
+- Slider  
+- Match block  
+- Bullet links  
+- Article cards  
+
+### **PAGES**
+- Home page  
+- Post detail page  
+- Category listing page  
+- Dashboard  
+- Login  
+- Register  
+
+Each section includes a comment header showing **where it would live** if modularised.
+
+Example:
+
+```css
+/* ========================================================================
+   COMPONENT → NAVBAR
+   (Would live in: css/components/navbar.css)
+========================================================================= */
+
+
+
 ## 👨‍💻 Author
 
 **Your Name**
