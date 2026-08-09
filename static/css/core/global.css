@@ -1,0 +1,27 @@
+/* ==========================================================
+   GLOBAL
+========================================================== */
+
+body{
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color:#ffffff;
+    font-family:Arial, Helvetica, sans-serif;
+    transition:background .4s ease, color .3s ease;
+}
+
+body.light-mode #swap-container {
+    background-color: #ffffff;
+    color:#000000;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+a{
+    text-decoration:none;
+    transition:color .25s ease;
+}
+
+img{
+    max-width:100%;
+    display:block;
+}

@@ -24,12 +24,16 @@ ALLOWED_HOSTS = config(
 ).split(",")
 
 INSTALLED_APPS = [
+    'daphne',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'channels',
 
     'crispy_forms',
     'crispy_bootstrap5',
@@ -38,6 +42,7 @@ INSTALLED_APPS = [
 
     'blog',
     'users',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -72,12 +77,36 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
 
                 'blog.context_processors.sidebar_data',
+                'chat.context_processors.unread_chat_count',
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# Live chat channel layer.
+# Defaults to the in-memory layer, which is fine for a single dev process.
+# Set REDIS_URL in production (and run more than one worker) to fan
+# messages out across processes via channels_redis.
+REDIS_URL = config('REDIS_URL', default='')
+
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [REDIS_URL],
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 DATABASES = {
     'default': {
@@ -116,26 +145,87 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-#Server errors are written 
-LOGGING = {
-    'version': 1,
+#Server errors, activities and security logs.
 
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': 'logs/errors.log',
+import os
+from pathlib import Path
+
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "standard": {
+            "format": "[%(asctime)s] %(levelname)s %(name)s: %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     },
 
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
+    "handlers": {
+        "error_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": str(LOG_DIR / "errors.log"),
+            "formatter": "standard",
+        },
+
+        "security_file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": str(LOG_DIR / "security.log"),
+            "formatter": "standard",
+        },
+
+        "activity_file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": str(LOG_DIR / "activity.log"),
+            "formatter": "standard",
+        },
+
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
+
+    "loggers": {
+        "django": {
+            "handlers": ["error_file", "console"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+
+        "security": {
+            "handlers": ["security_file", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+
+        "blog": {
+            "handlers": ["activity_file", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+
+        "users": {
+            "handlers": ["activity_file", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+
+        "chat": {
+            "handlers": ["activity_file", "console"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
+
+
 
 LANGUAGE_CODE = 'en-us'
 
@@ -158,8 +248,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'home'
+
+# Dev only: prints reset emails to the console instead of sending them.
+# Swap for a real SMTP backend before deploying.
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@footballhub.local")
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

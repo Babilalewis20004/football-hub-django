@@ -1,0 +1,12 @@
+<div id="bookmark-section">
+    <button
+        type="button"
+        hx-post="{% url 'bookmark_post' slug=post.slug %}"
+        hx-target="#bookmark-section"
+        hx-swap="outerHTML"
+        class="btn {% if is_bookmarked %}btn-warning{% else %}btn-outline-warning{% endif %}"
+    >
+        <i class="fa fa-bookmark"></i>
+        Bookmark: {{ bookmark_count }}
+    </button>
+</div>

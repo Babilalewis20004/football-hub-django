@@ -2,6 +2,9 @@
 
 {% block content %}
 
+{% url 'dashboard' as dashboard_url %}
+{% include "components/back_button.html" with fallback_url=dashboard_url %}
+
 <h2>Profile</h2>
 
 {% if user.avatar %}
@@ -29,5 +32,67 @@ Update Profile
 </button>
 
 </form>
+
+<hr>
+
+<div class="border border-danger rounded p-3 mt-4">
+    <h4 class="text-danger">Danger Zone</h4>
+    <p>
+        Deleting your account is permanent. Your posts, comments, and
+        bookmarks will be permanently removed and cannot be recovered.
+    </p>
+
+    <button type="button" class="btn btn-outline-danger"
+            data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+        Delete Your Account
+    </button>
+</div>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1"
+     aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form method="POST" action="{% url 'delete_account' %}">
+                {% csrf_token %}
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    {% if delete_error %}
+                    <div class="alert alert-danger">{{ delete_error }}</div>
+                    {% endif %}
+
+                    <p>This action is <strong>permanent and cannot be undone</strong>.
+                       Enter your password to confirm.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Permanently Delete My Account</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% if delete_error %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new bootstrap.Modal(document.getElementById('deleteAccountModal')).show();
+    });
+</script>
+{% endif %}
 
 {% endblock %}

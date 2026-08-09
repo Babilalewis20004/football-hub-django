@@ -1,0 +1,14 @@
+{% if featured_post %}
+<div class="article-card featured-card mb-5">
+    {% if featured_post.featured_image %}
+        <img src="{{ featured_post.featured_image.url }}" alt="{{ featured_post.title }}">
+    {% endif %}
+    <h3>{{ featured_post.title }}</h3>
+    <p class="small-text">
+        By <a href="{% url 'author_posts' featured_post.author.username %}">{{ featured_post.author }}</a>
+        • {{ featured_post.created_at|date:"M d, Y" }}
+    </p>
+    <p>{{ featured_post.content|truncatewords:40|safe }}</p>
+    <a href="{{ featured_post.get_absolute_url }}" class="btn btn-primary">Read More</a>
+</div>
+{% endif %}

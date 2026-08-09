@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% url 'dashboard' as dashboard_url %}
+{% include "components/back_button.html" with fallback_url=dashboard_url %}
+
+<h1>Saved Posts</h1>
+
+{% if bookmarks %}
+<div class="posts-grid">
+
+    {% for bookmark in bookmarks %}
+    <div class="post-card">
+
+        {% if bookmark.post.featured_image %}
+        <div class="post-card-image">
+            <img src="{{ bookmark.post.featured_image.url }}" alt="{{ bookmark.post.title }}">
+        </div>
+        {% endif %}
+
+        <div class="post-card-body">
+            <h3 class="post-card-title">{{ bookmark.post.title }}</h3>
+
+            <div class="post-card-meta mb-2 d-flex align-items-center gap-3" style="font-size: 0.9rem; opacity: 0.75;">
+                <span class="meta-item d-flex align-items-center gap-1">
+                    <i class="fa fa-user"></i>
+                    {{ bookmark.post.author.get_full_name|default:bookmark.post.author.username }}
+                </span>
+
+                <span class="meta-item d-flex align-items-center gap-1">
+                    <i class="fa fa-bookmark"></i>
+                    Saved {{ bookmark.created_at|timesince }} ago
+                </span>
+            </div>
+
+            <a href="{{ bookmark.post.get_absolute_url }}" class="post-card-link">
+                Read More →
+            </a>
+
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% else %}
+    <p class="text-muted">No saved posts yet.</p>
+{% endif %}
+
+{% endblock %}

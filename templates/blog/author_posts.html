@@ -2,35 +2,23 @@
 
 {% block content %}
 
-<h1>
+{% include "components/back_button.html" %}
 
-{{ author.username }}
-
-</h1>
+<h1>{{ author.username }}</h1>
 
 {% for post in posts %}
-
 <div class="card mb-3">
-
-<div class="card-body">
-
-<h4>{{ post.title }}</h4>
-
-<a
-href="{{ post.get_absolute_url }}"
-class="btn btn-primary">
-
-Read More
-
-</a>
-
+    <div class="card-body">
+        <h4>{{ post.title }}</h4>
+        <a href="{{ post.get_absolute_url }}" class="btn btn-primary">
+            Read More
+        </a>
+    </div>
 </div>
-
-</div>
-
 {% endfor %}
 
-{% endblock %}
+<hr>
+
 <h3>Popular Posts</h3>
 
 <ul>
@@ -43,3 +31,5 @@ Read More
         </li>
     {% endfor %}
 </ul>
+
+{% endblock %}

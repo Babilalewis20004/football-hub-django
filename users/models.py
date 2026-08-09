@@ -1,10 +1,8 @@
-# Create your models here.
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser):
-
     bio = models.TextField(
         blank=True,
         null=True
@@ -22,17 +20,18 @@ class CustomUser(AbstractUser):
     )
 
     ROLE_CHOICES = (
-    ('admin', 'Admin'),
-    ('editor', 'Editor'),
-    ('author', 'Author'),
-    ('reader', 'Reader'),
+        ('admin', 'Admin'),
+        ('editor', 'Editor'),
+        ('author', 'Author'),
+        ('reader', 'Reader'),
     )
 
     role = models.CharField(
-    max_length=20,
-    choices=ROLE_CHOICES,
-    default='reader'
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='reader'
     )
 
-def __str__(self):
+    def __str__(self):
         return self.username
+

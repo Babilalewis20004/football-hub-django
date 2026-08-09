@@ -17,3 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(rotatePosts, 5000);
 });
 
+
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('swap-container');
+    const hero = document.getElementById('hero-section');
+    const slider = document.getElementById('post-slider');
+
+    let swapped = false;
+
+    function swapPositions() {
+        if (!swapped) {
+            container.insertBefore(slider, hero);  // slider moves above hero
+        } else {
+            container.insertBefore(hero, slider);  // hero moves above slider
+        }
+        swapped = !swapped;
+    }
+
+    setInterval(swapPositions, 5000);
+});

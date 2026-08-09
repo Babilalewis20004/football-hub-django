@@ -1,0 +1,200 @@
+/* ==========================================================
+   NAVIGATION — Flex + Glow
+========================================================== */
+
+.navbar {
+    background: linear-gradient(
+        135deg,
+        rgba(102, 252, 241, 0.18),
+        rgba(0, 153, 255, 0.18),
+        rgba(147, 51, 234, 0.18)
+    );
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+
+    padding: 14px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+}
+
+.navbar-brand {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.navbar-nav {
+    display: flex;
+    gap: 25px;
+}
+
+.navbar-nav a {
+    color: #fff;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+
+    transition: color .25s ease, background .25s ease, box-shadow .25s ease;
+}
+
+.navbar-nav a:hover {
+    background: rgba(102, 252, 241, 0.18);
+    box-shadow: 0 0 12px rgba(102, 252, 241, 0.35);
+    color: #66fcf1;
+}
+
+/* RIGHT NAVBAR SECTION */
+.navbar .d-flex.align-items-center {
+    gap: 12px;
+}
+
+/* RIGHT MENU DRAWER (OFFCANVAS) */
+#rightMenu {
+    background: linear-gradient(
+        160deg,
+        rgba(15, 12, 41, 0.98),
+        rgba(48, 43, 99, 0.98)
+    );
+    backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    width: 280px;
+}
+
+#rightMenu .offcanvas-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+#rightMenu .offcanvas-body form {
+    width: 100%;
+}
+
+#rightMenu .offcanvas-body .btn {
+    width: 100%;
+    text-align: left;
+}
+
+/* SEARCH BAR */
+.navbar form input[type="text"] {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.navbar form input[type="text"]::placeholder {
+    color: #ccc;
+}
+
+.navbar form button {
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+/* DARK MODE BUTTON */
+#darkModeBtn {
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 6px 12px;
+    transition: 0.3s ease;
+}
+
+#darkModeBtn:hover {
+    background: #66fcf1;
+    color: #000;
+}
+
+/* LOGIN / REGISTER / DASHBOARD / SAVED / LOGOUT */
+.navbar .btn-sm {
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 6px 12px;
+    transition: 0.3s ease;
+}
+
+/* OUTLINE BUTTONS */
+.navbar .btn-outline-light:hover {
+    background: #66fcf1;
+    color: #000;
+}
+
+/* SUCCESS BUTTON (REGISTER) */
+.navbar .btn-success {
+    background: linear-gradient(90deg, #0099ff, #9333ea);
+    border: none;
+    font-weight: 600;
+}
+
+.navbar .btn-success:hover {
+    opacity: 0.85;
+}
+
+/* SAVED BUTTON */
+.navbar .btn-warning {
+    font-weight: 700;
+}
+
+/* LOGOUT LINK */
+.navbar .btn-link.nav-link {
+    color: #fff;
+    font-weight: 600;
+}
+
+.navbar .btn-link.nav-link:hover {
+    color: #66fcf1;
+}
+
+/* LEFT NAVBAR — Horizontal Neon Glass Tabs */
+.navbar-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px; /* spacing between items */
+}
+
+/* Individual nav links */
+.navbar-nav .nav-link {
+    color: #ffffff;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 8px 16px !important;
+    border-radius: 10px;
+
+    /* Glass effect */
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    transition: 0.3s ease;
+}
+
+/* Hover glow */
+.navbar-nav .nav-link:hover {
+    background: rgba(102, 252, 241, 0.15);
+    border-color: rgba(102, 252, 241, 0.4);
+    color: #66fcf1;
+
+    box-shadow: 0 0 10px #66fcf1, 0 0 20px #0099ff;
+}
+
+/* Active page highlight */
+.navbar-nav .nav-link.active {
+    background: rgba(102, 252, 241, 0.25);
+    border-color: #66fcf1;
+    color: #66fcf1;
+    font-weight: 700;
+}
+
+/* Remove Bootstrap spacing issues */
+.navbar-nav .nav-item {
+    margin: 0;
+    padding: 0;
+}

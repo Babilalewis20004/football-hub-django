@@ -1,0 +1,24 @@
+<section id="hero-section" class="hero-grid mb-5">
+
+    <div class="hero-left">
+        {% if hero_post.featured_image %}
+            <img src="{{ hero_post.featured_image.url }}" alt="{{ hero_post.title }}">
+        {% endif %}
+
+        <h1>{{ hero_post.title }}</h1>
+
+        <div class="hero-cta">
+            <a href="#">Latest News</a>
+            <a href="#">Match Reports</a>
+            <a href="#">Predictions</a>
+        </div>
+    </div>
+
+    <div class="hero-right">
+        <div class="hero-card">Fixtures</div>
+        <div class="hero-card">Standings</div>
+        <div class="hero-card">Transfers</div>
+        <div class="hero-card">Predictions</div>
+    </div>
+
+</section>

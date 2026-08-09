@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% url 'dashboard' as dashboard_url %}
+{% include "components/back_button.html" with fallback_url=dashboard_url %}
+
+<h1>Editor Dashboard</h1>
+
+{% if notifications %}
+<div class="alert alert-info mb-3">
+    <ul class="mb-0">
+        {% for note in notifications %}
+            <li>{{ note.message }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div
+    id="editor-dashboard-lists"
+    hx-get="{% url 'editor_dashboard_partial' %}"
+    hx-trigger="load, every 10s"
+    hx-target="#editor-dashboard-lists"
+    hx-swap="innerHTML"
+>
+    {% include "blog/partials/editor_dashboard_lists.html" %}
+</div>
+
+{% endblock %}
+

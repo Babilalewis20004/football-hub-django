@@ -1,23 +1,65 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 
-<h2>Login</h2>
+<div class="login-wrapper d-flex justify-content-center align-items-center">
+    <div class="login-box">
 
-<form method="post">
+        <h2 class="login-title">
+            <i class="bi bi-person-circle"></i>
+            Login to Football Hub
+        </h2>
 
-    {% csrf_token %}
+        <p class="login-subtitle">
+            Access your dashboard, saved posts & personalized football content.
+        </p>
 
-    {{ form.as_p }}
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
 
-    <button
-        class="btn btn-primary"
-        type="submit">
+            {% if error %}
+            <div class="alert alert-danger mt-2">
+                {{ error }}
+            </div>
+            {% endif %}
 
-        Login
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control login-input" required>
+            </div>
 
-    </button>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control login-input" required>
+            </div>
 
-</form>
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-control login-input" required>
+                    <option value="" disabled selected>Select your role</option>
+                    <option value="editor">Editor</option>
+                    <option value="author">Author</option>
+                    <option value="reader">Reader</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-login w-100 mt-3">
+                Login
+            </button>
+
+            <p class="login-footer mt-3">
+                <a href="{% url 'password_reset' %}">Forgot password?</a>
+            </p>
+
+            <p class="login-footer">
+                Don’t have an account?
+                <a href="{% url 'register' %}">Register</a>
+            </p>
+
+        </form>
+
+    </div>
+</div>
 
 {% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/components/chat.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/support_inbox.css' %}">
+
+{% url 'dashboard' as dashboard_url %}
+{% include "components/back_button.html" with fallback_url=dashboard_url %}
+
+<h1>Support Inbox</h1>
+<p class="text-muted">Live conversations from readers and visitors.</p>
+
+<div id="support-session-list"
+     class="list-group"
+     data-ws-scheme="{% if request.is_secure %}wss{% else %}ws{% endif %}">
+
+    {% for session in sessions %}
+        <a href="{% url 'support_chat_room' session.id %}"
+           class="list-group-item list-group-item-action support-session-row"
+           data-session-id="{{ session.id }}">
+            <div class="d-flex justify-content-between">
+                <strong>{{ session.visitor_name }}</strong>
+                <small class="text-muted">{{ session.updated_at|timesince }} ago</small>
+            </div>
+
+            {% with last=session.messages.last %}
+                {% if last %}
+                    <div class="small text-truncate support-session-preview">{{ last.sender_name }}: {{ last.body }}</div>
+                {% endif %}
+            {% endwith %}
+
+            {% if session.agent %}
+                <span class="badge bg-secondary mt-1">{{ session.agent.username }}</span>
+            {% else %}
+                <span class="badge bg-warning text-dark mt-1">Unassigned</span>
+            {% endif %}
+        </a>
+    {% empty %}
+        <p id="support-empty-msg" class="text-muted">No open chats right now.</p>
+    {% endfor %}
+</div>
+
+<script src="{% static 'js/support_inbox.js' %}" defer></script>
+{% endblock %}

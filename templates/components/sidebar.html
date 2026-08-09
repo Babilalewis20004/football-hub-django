@@ -1,0 +1,21 @@
+<div class="col-lg-4 sidebar-flex">
+
+    <div class="sidebar-glass">
+        <h5>🔥 Popular Posts</h5>
+        {% for post in popular_posts %}
+            <a href="{{ post.get_absolute_url }}" class="sidebar-item">
+                {{ post.title }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="sidebar-glass">
+        <h5>📁 Categories</h5>
+        {% for category in categories %}
+            <a href="#" class="sidebar-item">
+                {{ category.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+</div>

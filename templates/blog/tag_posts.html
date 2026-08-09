@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% include "components/back_button.html" %}
+
+<div class="category-header">
+
+    <div class="header-top">
+        <span class="header-tag">#{{ tag.name }}</span>
+        <span class="header-readtime">
+            <i class="fa fa-clock"></i> Latest Updates
+        </span>
+    </div>
+
+    <h1 class="header-title">Posts tagged "{{ tag.name }}"</h1>
+
+</div>
+
+<!-- POSTS GRID -->
+<div class="posts-grid">
+
+    {% for post in posts %}
+    <div class="post-card">
+
+        {% if post.featured_image %}
+        <div class="post-card-image">
+            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+        </div>
+        {% endif %}
+
+        <div class="post-card-body">
+            <h3 class="post-card-title">{{ post.title }}</h3>
+
+            <div class="post-card-meta mb-2 d-flex align-items-center gap-3" style="font-size: 0.9rem; opacity: 0.75;">
+                <span class="meta-item d-flex align-items-center gap-1">
+                    <i class="fa fa-user"></i>
+                    {{ post.author.get_full_name|default:post.author.username }}
+                </span>
+
+                <span class="meta-item d-flex align-items-center gap-1">
+                    <i class="fa fa-clock"></i>
+                    {{ post.created_at|timesince }} ago
+                </span>
+            </div>
+
+            <a href="{{ post.get_absolute_url }}" class="post-card-link">
+                Read More →
+            </a>
+
+        </div>
+    </div>
+    {% empty %}
+        <p class="text-muted">No posts found for this tag.</p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

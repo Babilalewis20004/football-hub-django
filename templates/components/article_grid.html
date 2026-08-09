@@ -1,0 +1,11 @@
+<div class="article-grid mb-5">
+    {% for post in worldcup_posts %}
+    <div class="article-card">
+        {% if post.featured_image %}
+            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+        {% endif %}
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.content|truncatewords:15 }}</p>
+    </div>
+    {% endfor %}
+</div>

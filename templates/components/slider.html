@@ -1,0 +1,11 @@
+<div id="post-slider" class="mb-5">
+    {% for post in slider_posts %}
+        <div class="post-slide {% if forloop.first %}active{% endif %}">
+            {% if post.featured_image %}
+                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+            {% endif %}
+            <h2>{{ post.title }}</h2>
+            <p>{{ post.content|truncatewords:20 }}</p>
+        </div>
+    {% endfor %}
+</div>

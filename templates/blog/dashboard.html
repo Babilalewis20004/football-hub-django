@@ -2,20 +2,58 @@
 
 {% block content %}
 
-<h1>Dashboard</h1>
+{% include "components/back_button.html" %}
 
-<h3>My Posts</h3>
+<div class="dashboard-container">
 
-{% for post in user_posts %}
-{{ post.title }}<br>
-{% endfor %}
+    <!-- HEADER -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="dashboard-subtitle">
+            Manage your posts, bookmarks and activity.
+        </p>
+    </div>
 
-<hr>
+    <div class="dashboard-grid">
 
-<h3>Bookmarks</h3>
+        <!-- LEFT COLUMN: USER POSTS -->
+        <section class="dashboard-section">
+            <h3 class="section-title">My Posts</h3>
 
-{% for bookmark in bookmarks %}
-{{ bookmark.post.title }}<br>
-{% endfor %}
+            {% if user_posts %}
+                <div class="dashboard-cards">
+                    {% for post in user_posts %}
+                        <div class="dashboard-card">
+                            <h4 class="card-title">{{ post.title }}</h4>
+                            <a href="{{ post.get_absolute_url }}" class="card-link">View Post →</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">You haven't written any posts yet.</p>
+            {% endif %}
+        </section>
+
+        <!-- RIGHT COLUMN: BOOKMARKS -->
+        <section class="dashboard-section">
+            <h3 class="section-title">Bookmarks</h3>
+
+            {% if bookmarks %}
+                <div class="dashboard-cards">
+                    {% for bookmark in bookmarks %}
+                        <div class="dashboard-card">
+                            <h4 class="card-title">{{ bookmark.post.title }}</h4>
+                            <a href="{{ bookmark.post.get_absolute_url }}" class="card-link">Open Bookmark →</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No bookmarks yet.</p>
+            {% endif %}
+        </section>
+
+    </div>
+
+</div>
 
 {% endblock %}

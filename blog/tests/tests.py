@@ -1,6 +1,8 @@
+from django.core.management import call_command
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.utils.text import slugify
 
 from blog.models import (
@@ -23,6 +25,8 @@ class BaseTestCase(TestCase):
 
         self.client = Client()
 
+        call_command("setup_roles")
+
         # Users
 
         self.author = User.objects.create_user(
@@ -30,12 +34,14 @@ class BaseTestCase(TestCase):
             email="author@test.com",
             password="Password123!"
         )
+        self.author.groups.add(Group.objects.get(name="Author"))
 
         self.reader = User.objects.create_user(
             username="reader",
             email="reader@test.com",
             password="Password123!"
         )
+        self.reader.groups.add(Group.objects.get(name="Reader"))
 
         # Category
 
@@ -246,7 +252,7 @@ class AuthenticationTests(BaseTestCase):
             password="Password123!"
         )
 
-        response = self.client.get(
+        response = self.client.post(
             reverse("logout")
         )
 
@@ -404,6 +410,10 @@ class CRUDTests(BaseTestCase):
         )
 
     def test_edit_page(self):
+        # Authors can only edit their own posts while still a draft/pending —
+        # once published, editing requires an Editor/Admin permission.
+        self.post.is_published = False
+        self.post.save()
 
         response = self.client.get(
             reverse(
@@ -415,6 +425,13 @@ class CRUDTests(BaseTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_page(self):
+        # Deleting posts requires the delete_post permission, which the
+        # Author role does not carry by default (see setup_roles).
+        delete_permission = Permission.objects.get(
+            content_type__app_label="blog",
+            codename="delete_post",
+        )
+        self.author.user_permissions.add(delete_permission)
 
         response = self.client.get(
             reverse(
@@ -596,10 +613,10 @@ class IntegrationTests(BaseTestCase):
         self.assertEqual(self.post.comments.count(), 1)
 
     def test_post_relationship(self):
-        self.assertEqual(self.category.post_set.count(), 1)
+        self.assertEqual(self.category.posts.count(), 1)
 
     def test_user_post_relationship(self):
-        self.assertEqual(self.author.post_set.count(), 1)
+        self.assertEqual(self.author.posts.count(), 1)
 
     def test_comment_relationship(self):
         self.assertEqual(self.comment.post, self.post)

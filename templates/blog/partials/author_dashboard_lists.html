@@ -1,0 +1,36 @@
+<h3>Drafts</h3>
+{% for post in drafts %}
+    <div class="card p-3 mb-2">
+        <strong>{{ post.title }}</strong>
+        <span class="badge bg-secondary">Draft</span>
+        <a href="{% url 'post_update' slug=post.slug %}" class="btn btn-sm btn-primary mt-2">Edit</a>
+    </div>
+{% empty %}
+    <p>No drafts.</p>
+{% endfor %}
+
+<hr>
+
+<h3>Pending Approval</h3>
+{% for post in pending %}
+    <div class="card p-3 mb-2">
+        <strong>{{ post.title }}</strong>
+        <span class="badge bg-warning text-dark">Pending</span>
+        <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary mt-2">View</a>
+    </div>
+{% empty %}
+    <p>No pending posts.</p>
+{% endfor %}
+
+<hr>
+
+<h3>Published</h3>
+{% for post in published %}
+    <div class="card p-3 mb-2">
+        <strong>{{ post.title }}</strong>
+        <span class="badge bg-success">Published</span>
+        <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary mt-2">View</a>
+    </div>
+{% empty %}
+    <p>No published posts yet.</p>
+{% endfor %}

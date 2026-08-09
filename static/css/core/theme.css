@@ -1,0 +1,33 @@
+/* Default = dark mode */
+body {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+/* Light mode */
+body.light-mode {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Navbar */
+body.light-mode .navbar {
+    background-color: #f8f9fa !important;
+}
+
+body.light-mode .nav-link {
+    color: #000 !important;
+}
+
+/* Footer */
+body.light-mode footer {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+/* role badges */
+.badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.4rem;
+}

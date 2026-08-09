@@ -1,0 +1,59 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/components/chat.css' %}">
+
+<div id="chat-widget"
+     data-authenticated="{{ user.is_authenticated|yesno:'1,0' }}"
+     data-display-name="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}"
+     data-start-url="{% url 'chat_start' %}"
+     data-ws-scheme="{% if request.is_secure %}wss{% else %}ws{% endif %}">
+
+    <button id="chat-bubble-btn" type="button" aria-label="Open live chat">
+        <i class="bi bi-chat-dots-fill"></i>
+        <span id="chat-unread-badge" class="d-none">0</span>
+    </button>
+
+    <div id="chat-panel" class="d-none">
+
+        <div id="chat-panel-header">
+            <div>
+                <strong>Football Hub Support</strong>
+                <div id="chat-status-text" class="small text-muted">We're online</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button id="chat-end-btn" type="button" class="btn btn-sm btn-outline-light d-none">End chat</button>
+                <button id="chat-close-btn" type="button" aria-label="Close chat">&times;</button>
+            </div>
+        </div>
+
+        <div id="chat-prechat">
+            <p class="small mb-2">Send us a message and a member of the team will jump in.</p>
+
+            <form id="chat-prechat-form">
+                <div id="chat-name-field" class="mb-2">
+                    <input type="text" id="chat-name-input" class="form-control form-control-sm"
+                           placeholder="Your name" autocomplete="name">
+                </div>
+                <textarea id="chat-first-message" class="form-control form-control-sm mb-2" rows="2"
+                          placeholder="How can we help?" required></textarea>
+                <button type="submit" class="btn btn-sm btn-success w-100">Start chat</button>
+            </form>
+        </div>
+
+        <div id="chat-messages" class="d-none"></div>
+
+        <form id="chat-message-form" class="d-none">
+            <input type="text" id="chat-message-input" class="form-control form-control-sm"
+                   placeholder="Type a message..." autocomplete="off">
+            <button type="submit" aria-label="Send message">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+
+        <div id="chat-ended-actions" class="d-none">
+            <button id="chat-new-btn" type="button" class="btn btn-sm btn-success w-100">Start new chat</button>
+        </div>
+
+    </div>
+</div>
+
+<script src="{% static 'js/chat_widget.js' %}" defer></script>

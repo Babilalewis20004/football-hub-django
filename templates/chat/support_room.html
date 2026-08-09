@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/components/chat.css' %}">
+<link rel="stylesheet" href="{% static 'css/components/support_inbox.css' %}">
+
+{% url 'support_inbox' as support_inbox_url %}
+{% include "components/back_button.html" with fallback_url=support_inbox_url label="Back to inbox" %}
+
+<div id="support-room"
+     data-session-id="{{ session.id }}"
+     data-ws-scheme="{% if request.is_secure %}wss{% else %}ws{% endif %}">
+
+    <div id="support-room-header" class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h4 class="mb-0">{{ session.visitor_name }}</h4>
+            <small class="text-muted" id="support-room-status">
+                {% if session.status == 'open' %}Chat open{% else %}Chat closed{% endif %}
+            </small>
+        </div>
+        <button id="support-end-btn" type="button" class="btn btn-sm btn-outline-danger"
+                {% if session.status == 'closed' %}disabled{% endif %}>
+            End chat
+        </button>
+    </div>
+
+    <div id="support-room-messages">
+        {% for message in messages %}
+            <div class="chat-message {% if message.is_staff_message %}chat-message-self{% else %}chat-message-other{% endif %}">
+                <span>{{ message.body }}</span>
+                <small class="chat-message-meta">{{ message.sender_name }} &middot; {{ message.created_at|date:"H:i" }}</small>
+            </div>
+        {% endfor %}
+    </div>
+
+    <form id="support-room-form" class="d-flex gap-2 mt-2">
+        <input type="text" id="support-room-input" class="form-control" placeholder="Type a reply..."
+               autocomplete="off" {% if session.status == 'closed' %}disabled{% endif %}>
+        <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+</div>
+
+<script src="{% static 'js/support_room.js' %}" defer></script>
+{% endblock %}

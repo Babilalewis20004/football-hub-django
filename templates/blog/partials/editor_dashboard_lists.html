@@ -1,0 +1,52 @@
+<h3>Pending Approval</h3>
+{% for post in pending %}
+    <div class="card p-3 mb-2">
+        <strong>{{ post.title }}</strong>
+        <span class="badge bg-warning text-dark">Pending</span>
+        <div class="mt-2 d-flex gap-2">
+            <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary">View</a>
+            <form action="{% url 'post_approve' slug=post.slug %}" method="POST" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-warning">Approve</button>
+            </form>
+            <form action="{% url 'post_publish' slug=post.slug %}" method="POST" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-success">Publish</button>
+            </form>
+        </div>
+    </div>
+{% empty %}
+    <p>No posts awaiting approval.</p>
+{% endfor %}
+
+<hr>
+
+<h3>Drafts</h3>
+{% for post in drafts %}
+    <div class="card p-3 mb-2">
+        <strong>{{ post.title }}</strong>
+        <span class="badge bg-secondary">Draft</span>
+        <div class="mt-2 d-flex gap-2">
+            <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary">View</a>
+            <form action="{% url 'post_approve' slug=post.slug %}" method="POST" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-warning">Approve</button>
+            </form>
+        </div>
+    </div>
+{% empty %}
+    <p>No drafts.</p>
+{% endfor %}
+
+<hr>
+
+<h3>Recently Published</h3>
+{% for post in published %}
+    <div class="card p-3 mb-2">
+        <strong>{{ post.title }}</strong>
+        <span class="badge bg-success">Published</span>
+        <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary mt-2">View</a>
+    </div>
+{% empty %}
+    <p>No published posts yet.</p>
+{% endfor %}

@@ -1,23 +1,48 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
-<h2>Register</h2>
+<div class="register-wrapper">
+    <div class="glass-card">
 
-<form method="post">
+        <h2 class="neon-title">Create Your Account</h2>
 
-    {% csrf_token %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert success-glow">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-    {{ form.as_p }}
+        <form method="post" id="registerForm">
+            {% csrf_token %}
+            {{ form.as_p }}
 
-    <button
-        class="btn btn-success"
-        type="submit">
+            <!-- Password Strength Meter -->
+            <div class="strength-meter">
+                <div id="strength-bar"></div>
+            </div>
 
-        Register
+            <button class="neon-btn" type="submit">
+                Register
+            </button>
 
-    </button>
+            <div class="social-login">
+                <p>Or continue with</p>
+                <button class="social-btn google">Google</button>
+                <button class="social-btn facebook">Facebook</button>
+                <button class="social-btn twitter">Twitter</button>
+            </div>
 
-</form>
+        </form>
+
+    </div>
+</div>
+
+<script src="{% static 'js/password-strength.js' %}"></script>
+
 
 {% endblock %}
+

@@ -1,0 +1,15 @@
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:900px){
+    .hero-grid{
+        grid-template-columns:1fr;
+    }
+    .hero-left img{
+        height:220px;
+    }
+    #post-slider{
+        height:240px;
+    }
+}

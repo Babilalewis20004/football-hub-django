@@ -1,75 +1,117 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container py-4">
 
-    <h2 class="mb-4">{{ title }}</h2>
+{% url 'dashboard' as dashboard_url %}
+{% include "components/back_button.html" with fallback_url=dashboard_url %}
 
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+<div class="post-form-wrapper">
+    <div class="post-form-card">
 
-        <!-- Title -->
-        <div class="mb-3">
-            <label class="form-label">Title</label>
-            {{ form.title }}
+        <div class="post-form-header">
+            <i class="bi bi-pencil-square"></i>
+            <h2>{{ title }}</h2>
         </div>
 
-        <!-- Category -->
-        <div class="mb-3">
-            <label class="form-label">Category</label>
-            {{ form.category }}
-        </div>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <!-- Content -->
-        <div class="mb-3">
-            <label class="form-label">Content</label>
-            {{ form.content }}
-        </div>
-
-        <!-- Excerpt -->
-        <div class="mb-3">
-            <label class="form-label">Excerpt</label>
-            {{ form.excerpt }}
-        </div>
-
-        <!-- Featured Image -->
-        <div class="mb-3">
-            <label class="form-label">Featured Image</label>
-            {{ form.featured_image }}
-
-            {% if post.featured_image %}
-                <div class="mt-2">
-                    <img src="{{ post.featured_image.url }}" alt="" class="img-fluid rounded" style="max-height: 200px;">
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    {{ form.errors }}
                 </div>
             {% endif %}
-        </div>
 
-        <!-- Tags -->
-        <div class="mb-3">
-            <label class="form-label">Tags</label>
-            {{ form.tags }}
-        </div>
+            <!-- POST DETAILS -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-file-text"></i> Post Details
+                </div>
 
-        <!-- SEO Title -->
-        <div class="mb-3">
-            <label class="form-label">SEO Title</label>
-            {{ form.seo_title }}
-        </div>
+                <div class="form-field">
+                    <label class="form-label">Title</label>
+                    {{ form.title }}
+                </div>
 
-        <!-- SEO Description -->
-        <div class="mb-3">
-            <label class="form-label">SEO Description</label>
-            {{ form.seo_description }}
-        </div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="form-label">Category</label>
+                        {{ form.category }}
+                    </div>
 
-        <!-- Publish Toggle -->
-        <div class="mb-3">
-            <label class="form-label">Publish</label>
-            {{ form.is_published }}
-        </div>
+                    <div class="form-field">
+                        <label class="form-label">Tags</label>
+                        {{ form.tags }}
+                    </div>
+                </div>
 
-        <button class="btn btn-primary">Save</button>
-    </form>
+                <div class="form-field">
+                    <label class="form-label">Content</label>
+                    {{ form.content }}
+                </div>
 
+                <div class="form-field">
+                    <label class="form-label">Excerpt</label>
+                    {{ form.excerpt }}
+                </div>
+            </div>
+
+            <!-- FEATURED IMAGE -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-image"></i> Featured Image
+                </div>
+
+                <div class="image-upload">
+                    {{ form.featured_image }}
+
+                    {% if post.featured_image %}
+                        <div class="image-preview">
+                            <img src="{{ post.featured_image.url }}" alt="" loading="lazy">
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SEO SETTINGS -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-search"></i> SEO Settings
+                </div>
+
+                <div class="form-field">
+                    <label class="form-label">SEO Title</label>
+                    {{ form.seo_title }}
+                </div>
+
+                <div class="form-field">
+                    <label class="form-label">SEO Description</label>
+                    {{ form.seo_description }}
+                </div>
+            </div>
+
+            <!-- PUBLISH -->
+            <div class="form-section">
+                <div class="publish-toggle">
+                    <div class="publish-toggle-text">
+                        <strong>Publish this post</strong>
+                        <span>Visible to readers once saved</span>
+                    </div>
+
+                    <label class="toggle-switch">
+                        {{ form.is_published }}
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-cancel">Cancel</a>
+                <button class="btn btn-save" type="submit">Save</button>
+            </div>
+
+        </form>
+
+    </div>
 </div>
 {% endblock %}

@@ -1,0 +1,22 @@
+{% comment %}
+Reusable back-navigation button.
+
+Usage:
+    {% include "components/back_button.html" %}
+    {% include "components/back_button.html" with fallback_url=post.get_absolute_url %}
+    {% include "components/back_button.html" with fallback_url=post.get_absolute_url label="Back to post" %}
+
+Behaviour:
+    Clicking the button uses the browser's history when the visitor actually
+    navigated here from another page on this site (so "Back" returns them to
+    their real previous page, e.g. a filtered list or search). Otherwise it
+    falls back to `fallback_url` (or the homepage), which covers visitors who
+    land directly on the page via a bookmark or shared link.
+{% endcomment %}
+<a href="{% if fallback_url %}{{ fallback_url }}{% else %}{% url 'home' %}{% endif %}"
+   class="back-button"
+   aria-label="Go back"
+   onclick="if (document.referrer && document.referrer.indexOf(window.location.origin) === 0 && window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+    <i class="bi bi-arrow-left"></i>
+    <span>{{ label|default:"Back" }}</span>
+</a>

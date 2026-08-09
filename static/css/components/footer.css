@@ -1,0 +1,133 @@
+/* FOOTER BASE */
+.footer {
+    background: linear-gradient(135deg, rgba(10, 20, 40, 0.9), rgba(20, 0, 60, 0.9));
+    color: #ffffff;
+    padding: 60px 0 20px;
+    border-top: 2px solid rgba(102, 252, 241, 0.4);
+    box-shadow: 0 -5px 20px rgba(102, 252, 241, 0.2);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* BRAND LOGO */
+.footer-logo {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #66fcf1;
+    letter-spacing: 1px;
+
+    text-shadow:
+        0 0 10px #66fcf1,
+        0 0 20px #0099ff;
+}
+
+/* FOOTER TEXT */
+.footer-text {
+    color: #d0d0d0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* SECTION HEADERS */
+.footer h5 {
+    color: #66fcf1;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* LINKS */
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 8px;
+}
+
+.footer-links a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #66fcf1;
+    text-shadow: 0 0 10px #66fcf1;
+}
+
+/* NEWSLETTER INPUT */
+.footer .input-group input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.footer .input-group input::placeholder {
+    color: #ccc;
+}
+
+.footer .btn-warning {
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+/* SOCIAL ICONS */
+.social-icons a {
+    font-size: 1.3rem;
+    margin-right: 12px;
+    color: #ffffff;
+    transition: 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: #66fcf1;
+    text-shadow: 0 0 10px #66fcf1;
+}
+
+/* FOOTER BOTTOM */
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    color: #d0d0d0;
+    font-size: 0.9rem;
+    padding: 10px 0;
+}
+
+.footer-bottom p {
+    margin: 5px 0;
+}
+
+/* DIVIDER */
+.footer hr {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* FLEX TEXT BOXES */
+.footer-box {
+    padding: 20px;
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    transition: 0.3s ease;
+}
+
+/* Hover glow */
+.footer-box:hover {
+    box-shadow: 0 0 12px #66fcf1, 0 0 25px #0099ff;
+    transform: translateY(-3px);
+}

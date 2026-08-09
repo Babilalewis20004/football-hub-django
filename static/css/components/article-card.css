@@ -1,0 +1,27 @@
+/* ==========================================================
+   ARTICLE GRID — Upgraded Hover
+========================================================== */
+
+.article-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:25px;
+    margin-bottom:40px;
+}
+
+.article-card{
+    background:#1f2937;
+    border-radius:14px;
+    overflow:hidden;
+    transition:transform .3s ease, box-shadow .3s ease;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+}
+
+.article-card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 14px 35px rgba(0,0,0,.45);
+}
+
+.article-card h3 {
+    text-shadow: 0 0 8px rgba(102, 252, 241, 0.4);
+}

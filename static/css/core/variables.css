@@ -1,0 +1,14 @@
+:root {
+    --neon-cyan: #66fcf1;
+    --neon-blue: #0099ff;
+    --neon-purple: #9333ea;
+
+    --glass-bg: rgba(255,255,255,0.08);
+    --glass-border: rgba(255,255,255,0.15);
+
+    --dark-bg: #1a1a1a;
+    --dark-bg-2: #111;
+
+    --shadow-soft: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-strong: 0 10px 25px rgba(0,0,0,0.45);
+}
