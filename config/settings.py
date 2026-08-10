@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'users.middleware.SessionInactivityTimeoutMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -301,6 +302,20 @@ CAPTCHA_TIMEOUT = 5  # minutes before a generated CAPTCHA expires
 X_FRAME_OPTIONS = 'DENY'
 
 SESSION_COOKIE_HTTPONLY = True
+
+# Automatic inactivity timeout (see users.middleware). This is the number
+# of seconds of no requests after which an authenticated session is
+# treated as expired.
+SESSION_INACTIVITY_TIMEOUT = config("SESSION_INACTIVITY_TIMEOUT", default=300, cast=int)
+
+# Backstop at the storage layer: even without the middleware, the session
+# store itself will not honour a session older than this many seconds
+# since it was last saved. SESSION_SAVE_EVERY_REQUEST makes that a sliding
+# window keyed on activity (like the middleware above) rather than a fixed
+# time-since-login.
+SESSION_COOKIE_AGE = SESSION_INACTIVITY_TIMEOUT
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 CSRF_COOKIE_HTTPONLY = True
 

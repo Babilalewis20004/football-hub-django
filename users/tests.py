@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from captcha.models import CaptchaStore
 
+from .middleware import SESSION_INACTIVITY_TIMEOUT, SESSION_TIMEOUT_MESSAGE
 from .models import LoginAttempt
 from .security import MAX_FAILED_ATTEMPTS, LOCKOUT_DURATION, CAPTCHA_AFTER_ATTEMPTS
 
@@ -363,6 +364,54 @@ class AdminLoginCaptchaTests(TestCase):
         self.assertTrue(
             LoginAttempt.objects.filter(username=self.username, successful=True).exists()
         )
+
+
+class SessionInactivityTimeoutTests(TestCase):
+    def setUp(self):
+        self.username = "idleuser"
+        self.password = "correct-horse-battery-staple"
+        self.user = User.objects.create_user(
+            username=self.username,
+            password=self.password,
+            role="reader",
+        )
+        self.client.login(username=self.username, password=self.password)
+        self.profile_url = reverse("profile")
+        self.login_url = reverse("login")
+
+    def _backdate_last_activity(self, seconds_ago):
+        session = self.client.session
+        session["last_activity"] = timezone.now().timestamp() - seconds_ago
+        session.save()
+
+    def test_authenticated_request_within_window_stays_logged_in(self):
+        response = self.client.get(self.profile_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+    def test_activity_inside_window_refreshes_timeout(self):
+        self._backdate_last_activity(SESSION_INACTIVITY_TIMEOUT - 30)
+        response = self.client.get(self.profile_url)
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+    def test_session_expires_after_inactivity_window(self):
+        self._backdate_last_activity(SESSION_INACTIVITY_TIMEOUT + 1)
+
+        response = self.client.get(self.profile_url)
+        self.assertRedirects(response, f"{self.login_url}?next={self.profile_url}")
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+    def test_expired_session_shows_timeout_message_on_login_page(self):
+        self._backdate_last_activity(SESSION_INACTIVITY_TIMEOUT + 1)
+
+        response = self.client.get(self.profile_url, follow=True)
+        self.assertContains(response, SESSION_TIMEOUT_MESSAGE)
+
+    def test_expired_session_cannot_reach_protected_view(self):
+        self._backdate_last_activity(SESSION_INACTIVITY_TIMEOUT + 1)
+
+        response = self.client.get(self.profile_url, follow=True)
+        self.assertTemplateUsed(response, "users/login.html")
 
 
 class RegisterCaptchaTests(TestCase):
