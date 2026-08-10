@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block title %}Search results for "{{ query }}" | Football Hub{% endblock %}
+{% block meta_description %}Search results for "{{ query }}" on Football Hub.{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+
 {% block content %}
 
 {% include "components/back_button.html" %}

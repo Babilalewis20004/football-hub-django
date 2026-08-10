@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Give Us Feedback | Football Hub{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block meta_description %}Rate your experience on Football Hub and share feedback to help us improve.{% endblock %}
+
+{% block content %}
+
+<div class="feedback-wrapper">
+    <div class="feedback-card">
+
+        <div class="feedback-header">
+            <i class="bi bi-chat-heart"></i>
+            <h2>Give Us Feedback</h2>
+        </div>
+
+        <p class="feedback-subtitle">
+            We'd love to know what you think of Football Hub. Your rating and
+            comments help us make the site better.
+        </p>
+
+        <form method="POST" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-field">
+                <label class="form-label">Your rating</label>
+
+                <div class="star-rating">
+                    {% for value in "54321" %}
+                        <input type="radio" id="star{{ value }}" name="rating" value="{{ value }}"
+                               {% if form.rating.value|stringformat:"s" == value %}checked{% endif %} required>
+                        <label for="star{{ value }}" title="{{ value }} star{{ value|pluralize }}">
+                            <i class="bi bi-star-fill"></i>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                {% if form.rating.errors %}
+                    <div class="field-error">{{ form.rating.errors|join:", " }}</div>
+                {% endif %}
+            </div>
+
+            {% if not user.is_authenticated %}
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="form-label">Name</label>
+                        {{ form.name }}
+                    </div>
+
+                    <div class="form-field">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="form-field">
+                <label class="form-label">Comments</label>
+                {{ form.comment }}
+                {% if form.comment.errors %}
+                    <div class="field-error">{{ form.comment.errors|join:", " }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-save" type="submit">Submit Feedback</button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

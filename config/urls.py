@@ -20,14 +20,30 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.contrib.sitemaps.views import sitemap
 
 from users import views as user_views
-from config.views import csp_report_view
+from config.views import csp_report_view, robots_txt
+from blog.sitemaps import PostSitemap, CategorySitemap, StaticViewSitemap
+
+sitemaps = {
+    "posts": PostSitemap,
+    "categories": CategorySitemap,
+    "static": StaticViewSitemap,
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('csp-report/', csp_report_view, name='csp_report'),
+
+    path(
+        'sitemap.xml',
+        sitemap,
+        {'sitemaps': sitemaps},
+        name='sitemap',
+    ),
+    path('robots.txt', robots_txt, name='robots_txt'),
 
     path('', include('blog.urls')),
     path('users/', include('users.urls')),

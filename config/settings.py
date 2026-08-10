@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
 
     'channels',
     'csp',
@@ -84,6 +85,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
 
                 'blog.context_processors.sidebar_data',
+                'blog.context_processors.seo_defaults',
                 'chat.context_processors.unread_chat_count',
             ],
         },

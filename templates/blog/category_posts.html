@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}{{ category.name }} News | Football Hub{% endblock %}
+{% block meta_description %}Latest {{ category.name }} news, match analysis, transfer updates and insights.{% endblock %}
+
 {% block content %}
 
 {% include "components/back_button.html" %}

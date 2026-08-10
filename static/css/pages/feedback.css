@@ -1,0 +1,175 @@
+/* ==========================================================
+   FEEDBACK PAGE — Glass Card + CSS-only Star Rating
+========================================================== */
+
+.feedback-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px 80px;
+}
+
+.feedback-card {
+    width: 100%;
+    max-width: 640px;
+    padding: 36px 40px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+}
+
+.feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+}
+
+.feedback-header i {
+    font-size: 1.6rem;
+    color: #00ffc8;
+    text-shadow: 0 0 10px rgba(0, 255, 200, 0.6);
+}
+
+.feedback-header h2 {
+    margin: 0;
+    color: #fff;
+    font-weight: 700;
+}
+
+.feedback-subtitle {
+    color: #b3b3b3;
+    margin-bottom: 26px;
+}
+
+/* FIELDS — shares the .form-field / .form-grid / .form-label / .form-control
+   conventions from post-form.css so widget rendering stays consistent. */
+.feedback-card .form-field {
+    margin-bottom: 18px;
+}
+
+.feedback-card .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+.feedback-card .form-label {
+    display: block;
+    color: #e0e0e0;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.feedback-card .form-control {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    border-radius: 10px;
+    padding: 11px 14px;
+    transition: 0.25s ease;
+}
+
+.feedback-card .form-control::placeholder {
+    color: #9a9a9a;
+}
+
+.feedback-card .form-control:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #00ffc8;
+    box-shadow: 0 0 0 3px rgba(0, 255, 200, 0.15);
+    color: #fff;
+    outline: none;
+}
+
+.feedback-card textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.field-error {
+    color: #ffb3b3;
+    font-size: 0.85rem;
+    margin-top: 6px;
+}
+
+/* STAR RATING — radios rendered 5..1 in DOM order, row-reverse flips them
+   visually to 1..5 so the ~ sibling selector can fill stars up to the
+   hovered/checked one without any JavaScript. */
+.star-rating {
+    position: relative;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.star-rating input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.star-rating label {
+    font-size: 2rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #ffc107;
+}
+
+.star-rating input:focus-visible + label {
+    outline: 2px solid #00ffc8;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ACTIONS */
+.feedback-card .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feedback-card .btn-save {
+    padding: 10px 26px;
+    border-radius: 10px;
+    font-weight: 600;
+    border: none;
+    background: #00ffc8;
+    color: #000;
+    box-shadow: 0 0 10px rgba(0, 255, 200, 0.5);
+    transition: 0.25s ease;
+}
+
+.feedback-card .btn-save:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 200, 0.8);
+    color: #000;
+}
+
+@media (max-width: 640px) {
+    .feedback-card {
+        padding: 26px 20px;
+    }
+
+    .feedback-card .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

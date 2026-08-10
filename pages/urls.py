@@ -7,6 +7,7 @@ from pages.views import (
     CookiesView,
     CareersView,
     ContactUsView,
+    feedback_view,
 )
 
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path('cookies/', CookiesView.as_view(), name='cookies'),
     path('careers/', CareersView.as_view(), name='careers'),
     path('contact-us/', ContactUsView.as_view(), name='contact_us'),
+    path('feedback/', feedback_view, name='feedback'),
 ]

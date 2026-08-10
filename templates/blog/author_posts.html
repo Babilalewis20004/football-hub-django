@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 
+{% block title %}Posts by {{ author.username }} | Football Hub{% endblock %}
+{% block meta_description %}Browse football articles written by {{ author.username }} on Football Hub.{% endblock %}
+
 {% block content %}
 
 {% include "components/back_button.html" %}

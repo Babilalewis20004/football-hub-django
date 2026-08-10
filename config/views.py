@@ -3,7 +3,7 @@ import logging
 
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 logger = logging.getLogger("csp")
 
@@ -28,3 +28,29 @@ def csp_report_view(request):
 
     logger.info("CSP violation: %s", json.dumps(report))
     return HttpResponse(status=204)
+
+
+@require_GET
+def robots_txt(request):
+    """
+    Points crawlers at the sitemap and steers them away from account,
+    dashboard, chat and admin paths that carry no SEO value and are
+    already login-gated.
+    """
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /dashboard/",
+        "Disallow: /saved/",
+        "Disallow: /post/create/",
+        "Disallow: /search/",
+        "Disallow: /users/",
+        "Disallow: /login/",
+        "Disallow: /logout/",
+        "Disallow: /password-reset/",
+        "Disallow: /chat/",
+        "Disallow: /csp-report/",
+        "",
+        f"Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
