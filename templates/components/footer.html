@@ -87,6 +87,20 @@
         <div class="footer-bottom">
             <p>© {% now "Y" %} Football Hub. All Rights Reserved.</p>
             <p>Developed with ❤️ using Django & PostgreSQL.</p>
+
+            <p class="footer-legal-links">
+                <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+                <span aria-hidden="true"> | </span>
+                <a href="{% url 'terms_of_use' %}">Terms of Use</a>
+                <span aria-hidden="true"> | </span>
+                <a href="{% url 'about_us' %}">About Us</a>
+                <span aria-hidden="true"> | </span>
+                <a href="{% url 'cookies' %}">Cookies</a>
+                <span aria-hidden="true"> | </span>
+                <a href="{% url 'careers' %}">Careers</a>
+                <span aria-hidden="true"> | </span>
+                <a href="{% url 'contact_us' %}">Contact Us</a>
+            </p>
         </div>
     </div>
 

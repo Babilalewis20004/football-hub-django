@@ -103,6 +103,22 @@
     margin: 5px 0;
 }
 
+/* LEGAL LINKS ROW */
+.footer-legal-links {
+    flex-basis: 100%;
+    text-align: center;
+}
+
+.footer-legal-links a {
+    color: #d0d0d0;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.footer-legal-links a:hover {
+    color: #66fcf1;
+}
+
 /* DIVIDER */
 .footer hr {
     border-color: rgba(255, 255, 255, 0.15);

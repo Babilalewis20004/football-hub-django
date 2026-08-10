@@ -1,0 +1,20 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/components/cookie-consent.css' %}">
+
+<div id="cookie-consent-banner" class="cookie-consent d-none" role="dialog" aria-live="polite"
+     aria-label="Cookie consent">
+    <div class="cookie-consent-inner">
+        <p class="cookie-consent-text">
+            We use cookies to keep you signed in, remember your preferences, and understand how
+            Football Hub is used. By clicking "Accept", you agree to our use of cookies.
+            <a href="{% url 'cookies' %}">Learn more</a>
+        </p>
+
+        <div class="cookie-consent-actions">
+            <button id="cookie-consent-decline" type="button" class="btn btn-outline-light btn-sm">Decline</button>
+            <button id="cookie-consent-accept" type="button" class="btn btn-warning btn-sm">Accept</button>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/cookie-consent.js' %}" defer></script>
