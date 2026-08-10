@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'taggit',
     'ckeditor',
+    'captcha',
 
     'blog',
     'users',
@@ -264,6 +265,21 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# Login attempt lockout (see users.security)
+LOGIN_MAX_FAILED_ATTEMPTS = config("LOGIN_MAX_FAILED_ATTEMPTS", default=5, cast=int)
+LOGIN_LOCKOUT_MINUTES = config("LOGIN_LOCKOUT_MINUTES", default=15, cast=int)
+
+# Number of consecutive recent failures (see users.security.failed_streak) after
+# which a CAPTCHA is required on the next login attempt for that username.
+# Must stay below LOGIN_MAX_FAILED_ATTEMPTS so the CAPTCHA appears before the
+# account locks out, not after.
+LOGIN_CAPTCHA_AFTER_ATTEMPTS = config("LOGIN_CAPTCHA_AFTER_ATTEMPTS", default=2, cast=int)
+
+# django-simple-captcha
+CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
+CAPTCHA_LENGTH = 5
+CAPTCHA_TIMEOUT = 5  # minutes before a generated CAPTCHA expires
 
 # Security Settings
 

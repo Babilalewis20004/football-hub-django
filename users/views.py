@@ -5,11 +5,49 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from .forms import RegisterForm, ProfileUpdateForm
+from .forms import RegisterForm, ProfileUpdateForm, LoginCaptchaForm
+from .security import (
+    get_client_ip,
+    record_attempt,
+    check_lockout,
+    lockout_message,
+    requires_captcha,
+)
 
 import logging
 logger = logging.getLogger("users")
 security_logger = logging.getLogger("security")
+
+
+def _record_failure_and_get_error(username, ip_address, reason):
+    """
+    Records a failed attempt, then re-checks lockout so a failure that just
+    tripped the threshold is reported immediately instead of requiring one
+    more attempt to notice. Always returns the same generic message for
+    non-locked failures, regardless of `reason`.
+    """
+    record_attempt(username, ip_address, successful=False, reason=reason)
+
+    locked, unlock_at = check_lockout(username)
+    if locked:
+        security_logger.warning(
+            "Account locked after repeated failures: '%s' from IP %s",
+            username,
+            ip_address,
+        )
+        return lockout_message(unlock_at)
+
+    return "Invalid credentials"
+
+
+def _maybe_captcha_form(username):
+    """
+    A fresh, unbound LoginCaptchaForm if `username` now needs one on its
+    next attempt, otherwise None. Called after recording a failure so a
+    failure that just crossed the CAPTCHA threshold shows the field
+    immediately, same pattern as the lockout re-check.
+    """
+    return LoginCaptchaForm() if requires_captcha(username) else None
 
 
 def register(request):
@@ -49,18 +87,72 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         role = request.POST.get("role")
+        ip_address = get_client_ip(request)
+
+        # Checked before anything else touches credentials, so a locked
+        # account never reaches authenticate() while it's locked.
+        locked, unlock_at = check_lockout(username)
+        if locked:
+            record_attempt(username, ip_address, successful=False, reason="locked_out")
+            security_logger.warning(
+                "Login blocked - account locked: '%s' from IP %s (unlocks %s)",
+                username,
+                ip_address,
+                unlock_at.isoformat(),
+            )
+            return render(
+                request,
+                "users/login.html",
+                {"error": lockout_message(unlock_at), "next": next_url},
+            )
+
+        # Progressive CAPTCHA: once a username's recent failures cross
+        # LOGIN_CAPTCHA_AFTER_ATTEMPTS, the next attempt must include a
+        # solved CAPTCHA before role/credentials are even checked - a
+        # wrong CAPTCHA is treated exactly like a wrong password.
+        if requires_captcha(username):
+            captcha_form = LoginCaptchaForm(request.POST)
+            if not captcha_form.is_valid():
+                security_logger.warning(
+                    "Login blocked - invalid CAPTCHA for '%s' from IP %s", username, ip_address,
+                )
+                record_attempt(username, ip_address, successful=False, reason="captcha_failed")
+
+                locked, unlock_at = check_lockout(username)
+                if locked:
+                    security_logger.warning(
+                        "Account locked after repeated failures: '%s' from IP %s",
+                        username,
+                        ip_address,
+                    )
+                    return render(
+                        request,
+                        "users/login.html",
+                        {"error": lockout_message(unlock_at), "next": next_url},
+                    )
+
+                return render(
+                    request,
+                    "users/login.html",
+                    {
+                        "error": "Incorrect CAPTCHA. Please try again.",
+                        "next": next_url,
+                        "captcha_form": LoginCaptchaForm(),
+                    },
+                )
 
         if role not in PUBLIC_LOGIN_ROLES:
             security_logger.warning(
                 "Login attempt with invalid role '%s' for '%s' from IP %s",
                 role,
                 username,
-                request.META.get("REMOTE_ADDR"),
+                ip_address,
             )
+            error = _record_failure_and_get_error(username, ip_address, "invalid_role")
             return render(
                 request,
                 "users/login.html",
-                {"error": "Invalid credentials", "next": next_url},
+                {"error": error, "next": next_url, "captcha_form": _maybe_captcha_form(username)},
             )
 
         user = authenticate(request, username=username, password=password)
@@ -73,14 +165,17 @@ def login_view(request):
                 "Failed login attempt for '%s' (role '%s') from IP %s",
                 username,
                 role,
-                request.META.get("REMOTE_ADDR"),
+                ip_address,
             )
+            reason = "invalid_credentials" if user is None else "role_mismatch"
+            error = _record_failure_and_get_error(username, ip_address, reason)
             return render(
                 request,
                 "users/login.html",
-                {"error": "Invalid credentials", "next": next_url},
+                {"error": error, "next": next_url, "captcha_form": _maybe_captcha_form(username)},
             )
 
+        record_attempt(username, ip_address, successful=True)
         login(request, user)
         logger.info("User logged in successfully: %s", user.username)
 

@@ -44,6 +44,14 @@
                 </select>
             </div>
 
+            {% if captcha_form %}
+            <div class="mb-3">
+                <label class="form-label">{{ captcha_form.captcha.label }}</label>
+                {{ captcha_form.captcha.errors }}
+                {{ captcha_form.captcha }}
+            </div>
+            {% endif %}
+
             <button type="submit" class="btn btn-login w-100 mt-3">
                 Login
             </button>
