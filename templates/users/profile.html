@@ -88,7 +88,7 @@ Update Profile
 </div>
 
 {% if delete_error %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function () {
         new bootstrap.Modal(document.getElementById('deleteAccountModal')).show();
     });

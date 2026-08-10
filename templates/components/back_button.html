@@ -12,11 +12,16 @@ Behaviour:
     their real previous page, e.g. a filtered list or search). Otherwise it
     falls back to `fallback_url` (or the homepage), which covers visitors who
     land directly on the page via a bookmark or shared link.
+
+    The click behaviour lives in static/js/back-button.js (delegated
+    listener on .back-button) rather than an inline onclick=, so this
+    component doesn't need a CSP script-src allowance of its own.
 {% endcomment %}
+{% load static %}
 <a href="{% if fallback_url %}{{ fallback_url }}{% else %}{% url 'home' %}{% endif %}"
    class="back-button"
-   aria-label="Go back"
-   onclick="if (document.referrer && document.referrer.indexOf(window.location.origin) === 0 && window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+   aria-label="Go back">
     <i class="bi bi-arrow-left"></i>
     <span>{{ label|default:"Back" }}</span>
 </a>
+<script src="{% static 'js/back-button.js' %}" defer></script>

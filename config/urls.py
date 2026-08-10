@@ -22,9 +22,12 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 
 from users import views as user_views
+from config.views import csp_report_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path('csp-report/', csp_report_view, name='csp_report'),
 
     path('', include('blog.urls')),
     path('users/', include('users.urls')),

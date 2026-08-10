@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from decouple import config
 
+from csp.constants import NONE, NONCE, SELF, UNSAFE_INLINE
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
@@ -34,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'channels',
+    'csp',
 
     'crispy_forms',
     'crispy_bootstrap5',
@@ -49,6 +52,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'csp.middleware.CSPMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -188,6 +192,13 @@ LOGGING = {
             "formatter": "standard",
         },
 
+        "csp_file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": str(LOG_DIR / "csp_violations.log"),
+            "formatter": "standard",
+        },
+
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "standard",
@@ -221,6 +232,12 @@ LOGGING = {
 
         "chat": {
             "handlers": ["activity_file", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+
+        "csp": {
+            "handlers": ["csp_file", "console"],
             "level": "INFO",
             "propagate": False,
         },
@@ -305,5 +322,53 @@ SECURE_REFERRER_POLICY = 'same-origin'
 #All HTTP traffic is redirected to HTTPS.
 #Session cookies are only sent over secure HTTPS connections.
 #CSRF cookies are only sent over HTTPS.
+
+# Content Security Policy (django-csp) — Report-Only for now.
+#
+# Report-Only mode logs violations to /csp-report/ (see config/views.py)
+# instead of blocking them, so real traffic can be reviewed before this
+# is promoted to an enforced CONTENT_SECURITY_POLICY. See CSP_NOTES.md
+# for what's allowed here, why, and what's needed before enforcing.
+# (Named CSP_VIOLATION_REPORT_PATH, not CSP_REPORT_URI — the latter is a
+# reserved legacy django-csp<4.0 setting name and trips its migration check.)
+CSP_VIOLATION_REPORT_PATH = config("CSP_VIOLATION_REPORT_PATH", default="/csp-report/")
+
+CONTENT_SECURITY_POLICY_REPORT_ONLY = {
+    "DIRECTIVES": {
+        "default-src": [SELF],
+
+        # HTMX + Bootstrap JS from their CDNs, plus per-request nonces for
+        # the few static inline <script> blocks in base.html/profile.html.
+        "script-src": [SELF, NONCE, "https://cdn.jsdelivr.net", "https://unpkg.com"],
+
+        # CKEditor 4 (django-ckeditor) applies inline styles to its own
+        # editing UI/iframe at runtime via JS, not <style> tags, so there's
+        # no <style>/nonce that can cover it — 'unsafe-inline' is required
+        # here. See CSP_NOTES.md.
+        "style-src": [SELF, UNSAFE_INLINE, "https://cdn.jsdelivr.net"],
+
+        # bootstrap-icons' woff2 files are served from the same jsdelivr CDN
+        # as its CSS.
+        "font-src": [SELF, "https://cdn.jsdelivr.net"],
+
+        "img-src": [SELF],
+
+        # Same-origin fetch() calls and the chat app's ws:// / wss://
+        # WebSocket connections (Django Channels) — 'self' covers both
+        # schemes on the current host.
+        "connect-src": [SELF],
+
+        # No iframes are embedded by this app, and none of ours should be
+        # embedded elsewhere (X_FRAME_OPTIONS already enforces this).
+        "frame-src": [NONE],
+        "frame-ancestors": [NONE],
+
+        "object-src": [NONE],
+        "base-uri": [SELF],
+        "form-action": [SELF],
+
+        "report-uri": [CSP_VIOLATION_REPORT_PATH],
+    },
+}
 
 
