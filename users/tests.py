@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -412,6 +412,113 @@ class SessionInactivityTimeoutTests(TestCase):
 
         response = self.client.get(self.profile_url, follow=True)
         self.assertTemplateUsed(response, "users/login.html")
+
+
+class SingleSessionEnforcementTests(TestCase):
+    """
+    Role-based single-session enforcement (users.signals.enforce_single_session):
+    admin/editor/author accounts may only hold one active session at a time -
+    logging in elsewhere evicts the previous one - while readers can stay
+    logged in on multiple clients simultaneously.
+    """
+
+    def setUp(self):
+        self.password = "correct-horse-battery-staple"
+        self.login_url = reverse("login")
+        self.profile_url = reverse("profile")
+
+    def _login(self, client, username, role):
+        return client.post(
+            self.login_url,
+            {"username": username, "password": self.password, "role": role, **_solved_captcha()},
+        )
+
+    def _is_authenticated(self, client):
+        return client.get(self.profile_url).wsgi_request.user.is_authenticated
+
+    def test_new_login_evicts_previous_session_for_editor(self):
+        User.objects.create_user(username="editoruser", password=self.password, role="editor")
+        first_client, second_client = Client(), Client()
+
+        self._login(first_client, "editoruser", "editor")
+        self.assertTrue(self._is_authenticated(first_client))
+
+        self._login(second_client, "editoruser", "editor")
+
+        self.assertFalse(self._is_authenticated(first_client))
+        self.assertTrue(self._is_authenticated(second_client))
+
+    def test_new_login_evicts_previous_session_for_author(self):
+        User.objects.create_user(username="authoruser", password=self.password, role="author")
+        first_client, second_client = Client(), Client()
+
+        self._login(first_client, "authoruser", "author")
+        self.assertTrue(self._is_authenticated(first_client))
+
+        self._login(second_client, "authoruser", "author")
+
+        self.assertFalse(self._is_authenticated(first_client))
+        self.assertTrue(self._is_authenticated(second_client))
+
+    def test_new_login_does_not_evict_previous_session_for_reader(self):
+        User.objects.create_user(username="readeruser", password=self.password, role="reader")
+        first_client, second_client = Client(), Client()
+
+        self._login(first_client, "readeruser", "reader")
+        self._login(second_client, "readeruser", "reader")
+
+        self.assertTrue(self._is_authenticated(first_client))
+        self.assertTrue(self._is_authenticated(second_client))
+
+    def test_eviction_only_affects_sessions_belonging_to_the_same_user(self):
+        User.objects.create_user(username="editoruser", password=self.password, role="editor")
+        User.objects.create_user(username="otherreader", password=self.password, role="reader")
+        editor_client, reader_client, second_editor_client = Client(), Client(), Client()
+
+        self._login(editor_client, "editoruser", "editor")
+        self._login(reader_client, "otherreader", "reader")
+        self._login(second_editor_client, "editoruser", "editor")
+
+        self.assertFalse(self._is_authenticated(editor_client))
+        self.assertTrue(self._is_authenticated(reader_client))
+        self.assertTrue(self._is_authenticated(second_editor_client))
+
+
+class AdminSingleSessionEnforcementTests(TestCase):
+    """
+    Admin accounts log in through the separate /admin/ form (see
+    AdminLoginLockoutTests), which bypasses the public login view entirely -
+    this confirms single-session enforcement still applies there since it's
+    hooked to the user_logged_in signal rather than the public view.
+    """
+
+    def setUp(self):
+        self.password = "correct-horse-battery-staple"
+        self.admin_login_url = reverse("admin:login")
+        self.admin_index_url = "/admin/"
+        User.objects.create_user(
+            username="adminuser", password=self.password, role="admin", is_staff=True
+        )
+
+    def _login(self, client):
+        return client.post(
+            self.admin_login_url,
+            {"username": "adminuser", "password": self.password, "next": self.admin_index_url, **_solved_captcha()},
+        )
+
+    def _is_authenticated(self, client):
+        return client.get(self.admin_index_url).wsgi_request.user.is_authenticated
+
+    def test_new_admin_login_evicts_previous_session(self):
+        first_client, second_client = Client(), Client()
+
+        self._login(first_client)
+        self.assertTrue(self._is_authenticated(first_client))
+
+        self._login(second_client)
+
+        self.assertFalse(self._is_authenticated(first_client))
+        self.assertTrue(self._is_authenticated(second_client))
 
 
 class RegisterCaptchaTests(TestCase):
