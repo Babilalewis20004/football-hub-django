@@ -153,9 +153,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 #Server errors, activities and security logs.
 
-import os
-from pathlib import Path
-
 LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
@@ -311,17 +308,16 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 
 SECURE_REFERRER_POLICY = 'same-origin'
 
-# Production only (enable after HTTPS is configured)
-
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-
-#These ensure:
-
-#All HTTP traffic is redirected to HTTPS.
-#Session cookies are only sent over secure HTTPS connections.
-#CSRF cookies are only sent over HTTPS.
+# Production only (enable after HTTPS is configured) — set these via env vars
+# once the site is served over HTTPS. Defaults keep local HTTP dev working:
+# All HTTP traffic is redirected to HTTPS.
+# Session cookies are only sent over secure HTTPS connections.
+# CSRF cookies are only sent over HTTPS.
+# HSTS tells browsers to only ever use HTTPS for this host going forward.
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
+SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=0, cast=int)
 
 # Content Security Policy (django-csp) — Report-Only for now.
 #

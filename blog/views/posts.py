@@ -1,8 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import permission_required, login_required
 from django.views.decorators.http import require_POST
-from django.http import HttpResponseForbidden, JsonResponse
-from django.template.loader import render_to_string
+from django.http import HttpResponseForbidden
 from django.db.models import F
 import logging
 

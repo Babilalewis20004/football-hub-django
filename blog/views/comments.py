@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger("blog")
 
 
-from blog.models import Post, Comment
+from blog.models import Comment
 
 
 @require_POST
