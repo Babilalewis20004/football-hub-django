@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import permission_required, login_required
 from django.views.decorators.http import require_POST
 from django.http import HttpResponseForbidden
-from django.db.models import F
+from django.db.models import F, Q
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger("blog")
@@ -157,17 +158,23 @@ def post_update(request, slug):
 def post_publish(request, slug):
     post = get_object_or_404(Post, slug=slug)
 
+    now = timezone.now()
     post.is_published = True
     post.is_approved = True
     post.status = "published"
+    post.published_at = now
+    post.status_changed_at = now
+
+    sent = send_new_post_announcement(post, request.build_absolute_uri(post.get_absolute_url()))
+    if sent:
+        post.telegram_announced_at = now
+
     post.save()
 
     Notification.objects.create(
     user=post.author,
     message=f"Your post '{post.title}' is now published!"
     )
-
-    send_new_post_announcement(post, request.build_absolute_uri(post.get_absolute_url()))
 
     logger.info(f"Post published: {post.title} by {request.user.username}")
     return redirect("post_detail", slug=post.slug)
@@ -180,7 +187,8 @@ def post_approve(request, slug):
 
     post.is_approved = True
     if not post.is_published:
-        post.status = "pending"
+        post.status = "approved"
+    post.status_changed_at = timezone.now()
     post.save()
 
     Notification.objects.create(
@@ -190,6 +198,78 @@ def post_approve(request, slug):
 
     logger.info(f"Post approved: {post.title} by {request.user.username}")
     return redirect("post_detail", slug=post.slug)
+
+
+@require_POST
+@permission_required("blog.can_approve_post")
+def post_request_changes(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+
+    feedback = request.POST.get("feedback", "").strip()
+
+    post.status = "needs_changes"
+    post.is_approved = False
+    post.editor_feedback = feedback
+    post.status_changed_at = timezone.now()
+    post.save()
+
+    Notification.objects.create(
+        user=post.author,
+        message=f"Changes requested on '{post.title}': {feedback}" if feedback
+        else f"Changes requested on '{post.title}'.",
+    )
+
+    logger.info(f"Changes requested on: {post.title} by {request.user.username}")
+    return redirect("editor_dashboard")
+
+
+@require_POST
+@login_required
+def post_submit_for_review(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+
+    if post.author != request.user:
+        security_logger.warning(
+            f"Unauthorized submit-for-review attempt by {request.user.username} on post {post.slug}"
+        )
+        return HttpResponseForbidden("You cannot submit another user's post for review.")
+
+    if post.status not in ("draft", "needs_changes"):
+        return HttpResponseForbidden("This post cannot be submitted for review right now.")
+
+    post.status = "in_review"
+    post.status_changed_at = timezone.now()
+    post.save()
+
+    Notification.objects.create(
+        user=post.author,
+        message=f"Your post '{post.title}' was submitted for review."
+    )
+
+    logger.info(f"Post submitted for review: {post.title} by {request.user.username}")
+    return redirect("author_dashboard")
+
+
+@require_POST
+@login_required
+def post_withdraw_from_review(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+
+    if post.author != request.user:
+        security_logger.warning(
+            f"Unauthorized withdraw-from-review attempt by {request.user.username} on post {post.slug}"
+        )
+        return HttpResponseForbidden("You cannot withdraw another user's post from review.")
+
+    if post.status != "in_review":
+        return HttpResponseForbidden("This post is not in review.")
+
+    post.status = "draft"
+    post.status_changed_at = timezone.now()
+    post.save()
+
+    logger.info(f"Post withdrawn from review: {post.title} by {request.user.username}")
+    return redirect("author_dashboard")
 
 
 @permission_required("blog.delete_post", raise_exception=True)
@@ -214,85 +294,127 @@ def post_delete(request, slug):
 #  Editor && Author Dashboard
 # ---------------------------------------------------------
 
+def _editor_dashboard_context(request):
+    status_filter = request.GET.get("status", "")
+    query = request.GET.get("q", "").strip()
+
+    posts = Post.objects.all()
+    if query:
+        posts = posts.filter(Q(title__icontains=query))
+
+    def bucket(*statuses):
+        qs = posts.filter(status__in=statuses).order_by("-status_changed_at", "-created_at")
+        if status_filter and status_filter not in statuses:
+            return qs.none()
+        return qs
+
+    drafts = bucket("draft", "needs_changes")
+    in_review = bucket("in_review")
+    approved = bucket("approved")
+    published = bucket("published")[:20]
+
+    recent_activity = Post.objects.order_by("-status_changed_at", "-created_at")[:8]
+
+    return {
+        "drafts": drafts,
+        "in_review": in_review,
+        "approved": approved,
+        "published": published,
+        "recent_activity": recent_activity,
+        "status_filter": status_filter,
+        "query": query,
+        "counts": {
+            "all": posts.count(),
+            "draft": posts.filter(status__in=["draft", "needs_changes"]).count(),
+            "in_review": posts.filter(status="in_review").count(),
+            "approved": posts.filter(status="approved").count(),
+            "published": posts.filter(status="published").count(),
+        },
+    }
+
+
 @login_required
 @permission_required("blog.can_approve_post")
 def editor_dashboard(request):
-    drafts = Post.objects.filter(status="draft").order_by("-created_at")
-    pending = Post.objects.filter(status="pending").order_by("-created_at")
-    published = Post.objects.filter(status="published").order_by("-created_at")[:20]
-
     notifications = list(Notification.objects.filter(user=request.user, is_read=False))
     # Mark notifications as read once dashboard is opened
     Notification.objects.filter(id__in=[n.id for n in notifications]).update(is_read=True)
 
+    context = _editor_dashboard_context(request)
+    context.update({
+        "notifications": notifications,
+        "title": "Editor Dashboard",
+    })
 
-    return render(
-        request,
-        "blog/editor_dashboard.html",
-        {
-            "drafts": drafts,
-            "pending": pending,
-            "published": published,
-            "notifications": notifications,
-            "title": "Editor Dashboard",
-        }
-    )
+    return render(request, "blog/editor_dashboard.html", context)
+
 
 @login_required
 @permission_required("blog.can_approve_post")
 def editor_dashboard_partial(request):
-    drafts = Post.objects.filter(status="draft").order_by("-created_at")
-    pending = Post.objects.filter(status="pending").order_by("-created_at")
-    published = Post.objects.filter(status="published").order_by("-created_at")[:20]
-
     return render(
         request,
         "blog/partials/editor_dashboard_lists.html",
-        {
-            "drafts": drafts,
-            "pending": pending,
-            "published": published,
-        }
+        _editor_dashboard_context(request),
     )
 
+
+def _author_dashboard_context(request):
+    status_filter = request.GET.get("status", "")
+    query = request.GET.get("q", "").strip()
+
+    posts = Post.objects.filter(author=request.user)
+    if query:
+        posts = posts.filter(Q(title__icontains=query))
+
+    def bucket(*statuses):
+        qs = posts.filter(status__in=statuses).order_by("-status_changed_at", "-created_at")
+        if status_filter and status_filter not in statuses:
+            return qs.none()
+        return qs
+
+    drafts = bucket("draft")
+    needs_changes = bucket("needs_changes")
+    in_review = bucket("in_review", "approved")
+    published = bucket("published")
+
+    return {
+        "drafts": drafts,
+        "needs_changes": needs_changes,
+        "in_review": in_review,
+        "published": published,
+        "status_filter": status_filter,
+        "query": query,
+        "counts": {
+            "all": posts.count(),
+            "draft": posts.filter(status="draft").count(),
+            "in_review": posts.filter(status__in=["in_review", "approved"]).count(),
+            "needs_changes": posts.filter(status="needs_changes").count(),
+            "published": posts.filter(status="published").count(),
+        },
+    }
 
 
 @login_required
 @permission_required("blog.add_post", raise_exception=True)
 def author_dashboard(request):
-    drafts = Post.objects.filter(author=request.user, status="draft")
-    pending = Post.objects.filter(author=request.user, status="pending")
-    published = Post.objects.filter(author=request.user, status="published")
-
     notifications = list(Notification.objects.filter(user=request.user, is_read=False))
     Notification.objects.filter(id__in=[n.id for n in notifications]).update(is_read=True)
 
-    return render(
-        request,
-        "blog/author_dashboard.html",
-        {
-            "drafts": drafts,
-            "pending": pending,
-            "published": published,
-            "notifications": notifications,
-            "title": "My Posts",
-        }
-    )
+    context = _author_dashboard_context(request)
+    context.update({
+        "notifications": notifications,
+        "title": "My Posts",
+    })
+
+    return render(request, "blog/author_dashboard.html", context)
 
 
 @login_required
 @permission_required("blog.add_post", raise_exception=True)
 def author_dashboard_partial(request):
-    drafts = Post.objects.filter(author=request.user, status="draft")
-    pending = Post.objects.filter(author=request.user, status="pending")
-    published = Post.objects.filter(author=request.user, status="published")
-
     return render(
         request,
         "blog/partials/author_dashboard_lists.html",
-        {
-            "drafts": drafts,
-            "pending": pending,
-            "published": published,
-        }
+        _author_dashboard_context(request),
     )

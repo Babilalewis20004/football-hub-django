@@ -1,0 +1,344 @@
+/* ==========================================================
+   EDITOR DASHBOARD — kanban board, glass + neon
+========================================================== */
+
+.ed-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+}
+
+.ed-title{
+    font-size:1.9rem;
+    font-weight:800;
+    color:#fff;
+    margin:0;
+    text-shadow:0 0 10px rgba(102, 252, 241, 0.35);
+}
+
+.ed-subtitle{
+    color:#9ca3af;
+    margin:4px 0 0;
+    font-size:0.9rem;
+}
+
+.ed-search{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:10px;
+    padding:9px 14px;
+    color:#9ca3af;
+}
+
+.ed-search input{
+    background:transparent;
+    border:none;
+    color:#fff;
+    outline:none;
+    font-size:0.9rem;
+    min-width:180px;
+}
+
+.ed-search input::placeholder{color:#8a8f98;}
+
+/* ---------- filter chips ---------- */
+.ed-filters{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    margin-bottom:20px;
+}
+
+.ed-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:999px;
+    padding:6px 13px;
+    font-size:0.8rem;
+    font-weight:600;
+    color:#e5e7eb;
+    white-space:nowrap;
+    background:rgba(255,255,255,0.05);
+    transition:0.2s ease;
+}
+
+.ed-chip:hover{
+    background:rgba(102, 252, 241, 0.12);
+    color:#fff;
+}
+
+.ed-chip.active{
+    background:#66fcf1;
+    border-color:#66fcf1;
+    color:#0b1f3a;
+}
+
+.ed-chip .dot{width:7px;height:7px;border-radius:50%;}
+.ed-chip .n{opacity:0.65;font-weight:500;}
+
+/* ---------- board ---------- */
+.ed-board{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(240px, 1fr));
+    gap:16px;
+    overflow-x:auto;
+    padding-bottom:6px;
+}
+
+@media (max-width:900px){
+    .ed-board{
+        grid-auto-flow:column;
+        grid-auto-columns:82vw;
+        grid-template-columns:none;
+    }
+}
+
+.ed-col{min-width:0;}
+
+.ed-col-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:8px;
+    border-bottom:2px solid rgba(255,255,255,0.18);
+    margin-bottom:12px;
+}
+
+.ed-col-title{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:0.9rem;
+    font-weight:700;
+    color:#fff;
+}
+
+.ed-col-title .dot{width:9px;height:9px;border-radius:50%;}
+
+.ed-col-count{
+    font-size:0.75rem;
+    color:#9ca3af;
+    font-family:'Courier New', monospace;
+}
+
+.ed-empty{
+    font-size:0.82rem;
+    color:#6b7280;
+    padding:8px 0;
+}
+
+/* ---------- card ---------- */
+.ed-card{
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);
+    transition:transform .25s ease, box-shadow .25s ease;
+}
+
+.ed-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 12px 28px rgba(0,0,0,0.45);
+}
+
+.ed-card--flag{
+    border-color:rgba(180, 35, 24, 0.55);
+}
+
+.ed-thumb{
+    height:64px;
+    border-radius:8px;
+    background:rgba(255,255,255,0.05);
+    border:1px dashed rgba(255,255,255,0.2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    margin-bottom:10px;
+}
+
+.ed-thumb img{width:100%;height:100%;object-fit:cover;}
+.ed-thumb span{font-size:0.7rem;color:#6b7280;}
+
+.ed-card h3{
+    font-size:0.92rem;
+    font-weight:600;
+    line-height:1.35;
+    margin:0 0 6px;
+}
+
+.ed-card h3 a{color:#fff;}
+.ed-card h3 a:hover{color:#66fcf1;}
+
+.ed-meta{
+    font-size:0.75rem;
+    color:#9ca3af;
+    margin-bottom:8px;
+}
+
+.ed-status-badge{
+    display:inline-block;
+    font-size:0.68rem;
+    font-weight:700;
+    color:#fff;
+    padding:3px 9px;
+    border-radius:6px;
+    margin-bottom:9px;
+}
+
+.ed-telegram-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.72rem;
+    color:#9ca3af;
+    padding-top:8px;
+    margin-bottom:9px;
+    border-top:1px dashed rgba(255,255,255,0.15);
+}
+
+.ed-tg-icon{
+    width:14px;height:14px;
+    border-radius:50%;
+    border:1.5px solid currentColor;
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;
+    flex-shrink:0;
+}
+
+.ed-tg-sent{color:#15803D;}
+.ed-tg-pending{color:#6b7280;}
+
+/* ---------- actions ---------- */
+.ed-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+}
+
+.ed-action{
+    border:1px solid rgba(255,255,255,0.25);
+    border-radius:7px;
+    padding:5px 10px;
+    font-size:0.72rem;
+    font-weight:600;
+    color:#e5e7eb;
+    background:transparent;
+    cursor:pointer;
+    transition:0.2s ease;
+}
+
+.ed-action:hover{
+    background:rgba(255,255,255,0.1);
+    color:#fff;
+}
+
+.ed-action--primary{
+    background:#00ffc8;
+    border-color:#00ffc8;
+    color:#000;
+}
+
+.ed-action--primary:hover{
+    box-shadow:0 0 14px rgba(0, 255, 200, 0.5);
+    color:#000;
+}
+
+.ed-action--danger{
+    border-color:rgba(180, 35, 24, 0.6);
+    color:#ff8a80;
+}
+
+.ed-action--danger:hover{
+    background:rgba(180, 35, 24, 0.15);
+    color:#ffb3ab;
+}
+
+.ed-action--ghost{
+    border-style:dashed;
+    color:#9ca3af;
+}
+
+/* ---------- request-changes disclosure ---------- */
+.ed-feedback-details{width:100%;}
+
+.ed-feedback-details summary{
+    list-style:none;
+    display:inline-block;
+}
+
+.ed-feedback-details summary::-webkit-details-marker{display:none;}
+
+.ed-feedback-form{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:10px;
+    width:100%;
+}
+
+.ed-feedback-form textarea{
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:8px;
+    color:#fff;
+    padding:8px 10px;
+    font-size:0.8rem;
+    resize:vertical;
+}
+
+.ed-feedback-form textarea::placeholder{color:#8a8f98;}
+
+/* ---------- activity panel ---------- */
+.ed-activity-panel{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:14px;
+    padding:18px 20px;
+    margin-top:26px;
+}
+
+.ed-activity-panel h4{
+    font-size:0.95rem;
+    font-weight:700;
+    color:#fff;
+    margin:0 0 12px;
+}
+
+.ed-activity-item{
+    display:flex;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px dashed rgba(255,255,255,0.1);
+    font-size:0.85rem;
+    color:#d1d5db;
+}
+
+.ed-activity-item:last-child{border-bottom:none;}
+
+.ed-activity-dot{
+    width:7px;height:7px;
+    border-radius:50%;
+    background:#1B7A3D;
+    margin-top:6px;
+    flex-shrink:0;
+}
+
+.ed-activity-item .t{
+    display:block;
+    color:#6b7280;
+    font-size:0.72rem;
+    margin-top:2px;
+}

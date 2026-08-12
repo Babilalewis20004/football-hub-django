@@ -1,0 +1,297 @@
+/* ==========================================================
+   AUTHOR DASHBOARD — "My Posts", glass + neon
+========================================================== */
+
+.ad-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+}
+
+.ad-title{
+    font-size:1.9rem;
+    font-weight:800;
+    color:#fff;
+    margin:0;
+    text-shadow:0 0 10px rgba(102, 252, 241, 0.35);
+}
+
+.ad-subtitle{
+    color:#9ca3af;
+    margin:4px 0 0;
+    font-size:0.9rem;
+}
+
+.ad-btn-new{
+    border:1px solid #00ffc8;
+    background:#00ffc8;
+    color:#000;
+    border-radius:9px;
+    padding:9px 16px;
+    font-size:0.85rem;
+    font-weight:700;
+    white-space:nowrap;
+    box-shadow:0 0 10px rgba(0, 255, 200, 0.4);
+    transition:0.2s ease;
+}
+
+.ad-btn-new:hover{
+    box-shadow:0 0 18px rgba(0, 255, 200, 0.7);
+    color:#000;
+}
+
+/* ---------- stat strip ---------- */
+.ad-stats{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:12px;
+    margin-bottom:22px;
+}
+
+.ad-stat{
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:12px;
+    padding:12px 14px;
+}
+
+.ad-stat .num{
+    font-size:1.5rem;
+    font-weight:800;
+    color:#fff;
+}
+
+.ad-stat .lbl{
+    font-size:0.75rem;
+    color:#9ca3af;
+    font-weight:600;
+    margin-top:2px;
+}
+
+.ad-stat.flag{border-color:rgba(180, 35, 24, 0.6);}
+.ad-stat.flag .num{color:#ff8a80;}
+
+@media (max-width:640px){
+    .ad-stats{grid-template-columns:repeat(2, 1fr);}
+}
+
+/* ---------- layout ---------- */
+.ad-main-layout{
+    display:grid;
+    grid-template-columns:1fr 300px;
+    gap:20px;
+}
+
+@media (max-width:820px){
+    .ad-main-layout{grid-template-columns:1fr;}
+}
+
+/* ---------- filter chips (shared look with editor board) ---------- */
+.ad-filters{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:10px;
+    margin-bottom:6px;
+}
+
+.ad-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:999px;
+    padding:6px 13px;
+    font-size:0.8rem;
+    font-weight:600;
+    color:#e5e7eb;
+    white-space:nowrap;
+    background:rgba(255,255,255,0.05);
+    transition:0.2s ease;
+}
+
+.ad-chip:hover{background:rgba(102, 252, 241, 0.12);color:#fff;}
+.ad-chip.active{background:#66fcf1;border-color:#66fcf1;color:#0b1f3a;}
+.ad-chip .dot{width:7px;height:7px;border-radius:50%;}
+.ad-chip .n{opacity:0.65;font-weight:500;}
+
+/* ---------- post rows ---------- */
+.ad-row{
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+    display:flex;
+    gap:14px;
+    transition:transform .25s ease, box-shadow .25s ease;
+}
+
+.ad-row:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 24px rgba(0,0,0,0.4);
+}
+
+.ad-row--flag{border-color:rgba(180, 35, 24, 0.55);}
+
+.ad-thumb{
+    width:60px;height:60px;
+    flex-shrink:0;
+    border-radius:8px;
+    background:rgba(255,255,255,0.05);
+    border:1px dashed rgba(255,255,255,0.2);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    text-align:center;
+}
+
+.ad-thumb img{width:100%;height:100%;object-fit:cover;}
+.ad-thumb span{font-size:0.6rem;color:#6b7280;padding:2px;}
+
+.ad-body{flex:1;min-width:0;}
+
+.ad-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+}
+
+.ad-body h3{
+    font-size:0.95rem;
+    font-weight:600;
+    color:#fff;
+    margin:0 0 6px;
+    line-height:1.35;
+}
+
+.ad-status-badge{
+    display:inline-block;
+    font-size:0.68rem;
+    font-weight:700;
+    color:#fff;
+    padding:3px 9px;
+    border-radius:6px;
+    white-space:nowrap;
+    flex-shrink:0;
+}
+
+.ad-meta{
+    font-size:0.78rem;
+    color:#9ca3af;
+    margin-bottom:9px;
+}
+
+.ad-feedback-box{
+    background:rgba(180, 35, 24, 0.12);
+    border:1px solid rgba(180, 35, 24, 0.35);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:0.8rem;
+    color:#ffb3ab;
+    margin-bottom:10px;
+}
+
+.ad-feedback-box b{
+    display:block;
+    font-size:0.65rem;
+    color:#ff8a80;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-bottom:3px;
+}
+
+.ad-telegram-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.75rem;
+    color:#9ca3af;
+    margin-bottom:9px;
+}
+
+.ad-tg-icon{
+    width:13px;height:13px;
+    border-radius:50%;
+    border:1.5px solid currentColor;
+    display:flex;align-items:center;justify-content:center;
+    font-size:7.5px;
+    flex-shrink:0;
+}
+
+.ad-tg-sent{color:#15803D;}
+.ad-tg-pending{color:#6b7280;}
+
+.ad-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+.ad-inline-form{display:inline-flex;}
+
+.ad-action{
+    border:1px solid rgba(255,255,255,0.25);
+    border-radius:7px;
+    padding:6px 11px;
+    font-size:0.78rem;
+    font-weight:600;
+    color:#e5e7eb;
+    background:transparent;
+    cursor:pointer;
+    transition:0.2s ease;
+}
+
+.ad-action:hover{background:rgba(255,255,255,0.1);color:#fff;}
+
+.ad-action--primary{
+    background:#00ffc8;
+    border-color:#00ffc8;
+    color:#000;
+}
+
+.ad-action--primary:hover{
+    box-shadow:0 0 14px rgba(0, 255, 200, 0.5);
+    color:#000;
+}
+
+.ad-action--ghost{border-style:dashed;color:#9ca3af;}
+
+.ad-action--link{
+    border:none;
+    background:none;
+    padding:6px 2px;
+    color:#9ca3af;
+    text-decoration:underline;
+    text-decoration-style:dotted;
+}
+
+.ad-action--danger{color:#ff8a80;}
+
+/* ---------- sidebar activity ---------- */
+.ad-activity-item{
+    display:flex;
+    gap:9px;
+    padding:8px 0;
+    border-bottom:1px dashed rgba(255,255,255,0.15);
+    font-size:0.85rem;
+}
+
+.ad-activity-item:last-child{border-bottom:none;}
+
+.ad-activity-dot{
+    width:7px;height:7px;
+    border-radius:50%;
+    background:#66fcf1;
+    margin-top:6px;
+    flex-shrink:0;
+}
+
+.ad-activity-item .t{
+    display:block;
+    color:#d1d5db;
+    opacity:0.75;
+    font-size:0.72rem;
+    margin-top:2px;
+}

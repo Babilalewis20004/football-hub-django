@@ -8,26 +8,56 @@
 {% url 'dashboard' as dashboard_url %}
 {% include "components/back_button.html" with fallback_url=dashboard_url %}
 
-<h1>My Posts</h1>
-
-{% if notifications %}
-<div class="alert alert-info mb-3">
-    <ul class="mb-0">
-        {% for note in notifications %}
-            <li>{{ note.message }}</li>
-        {% endfor %}
-    </ul>
+<div class="ad-header">
+    <div>
+        <h1 class="ad-title">My Posts</h1>
+        <p class="ad-subtitle">{{ request.user.get_full_name|default:request.user.username }}'s posts</p>
+    </div>
+    <a href="{% url 'post_create' %}" class="ad-btn-new">+ Start new draft</a>
 </div>
-{% endif %}
 
-<div
-    id="author-dashboard-lists"
-    hx-get="{% url 'author_dashboard_partial' %}"
-    hx-trigger="load, every 10s"
-    hx-target="#author-dashboard-lists"
-    hx-swap="innerHTML"
->
-    {% include "blog/partials/author_dashboard_lists.html" %}
+<div class="ad-stats">
+    <div class="ad-stat"><div class="num">{{ counts.draft }}</div><div class="lbl">Drafts</div></div>
+    <div class="ad-stat"><div class="num">{{ counts.in_review }}</div><div class="lbl">In review</div></div>
+    <div class="ad-stat{% if counts.needs_changes %} flag{% endif %}"><div class="num">{{ counts.needs_changes }}</div><div class="lbl">Needs changes</div></div>
+    <div class="ad-stat"><div class="num">{{ counts.published }}</div><div class="lbl">Published</div></div>
+</div>
+
+<div class="ad-main-layout">
+    <div class="ad-col-main">
+        <div class="ad-filters">
+            {% url 'author_dashboard' as au_url %}
+            <a href="{{ au_url }}" class="ad-chip{% if not status_filter %} active{% endif %}">All <span class="n">{{ counts.all }}</span></a>
+            <a href="{{ au_url }}?status=draft" class="ad-chip{% if status_filter == 'draft' %} active{% endif %}"><span class="dot" style="background:#64748B"></span>Draft <span class="n">{{ counts.draft }}</span></a>
+            <a href="{{ au_url }}?status=in_review" class="ad-chip{% if status_filter == 'in_review' %} active{% endif %}"><span class="dot" style="background:#B45309"></span>In review <span class="n">{{ counts.in_review }}</span></a>
+            <a href="{{ au_url }}?status=needs_changes" class="ad-chip{% if status_filter == 'needs_changes' %} active{% endif %}"><span class="dot" style="background:#B42318"></span>Needs changes <span class="n">{{ counts.needs_changes }}</span></a>
+            <a href="{{ au_url }}?status=published" class="ad-chip{% if status_filter == 'published' %} active{% endif %}"><span class="dot" style="background:#15803D"></span>Published <span class="n">{{ counts.published }}</span></a>
+        </div>
+
+        <div
+            id="author-dashboard-lists"
+            hx-get="{% url 'author_dashboard_partial' %}?status={{ status_filter }}"
+            hx-trigger="load, every 10s"
+            hx-target="#author-dashboard-lists"
+            hx-swap="innerHTML"
+        >
+            {% include "blog/partials/author_dashboard_lists.html" %}
+        </div>
+    </div>
+
+    <div class="ad-col-side">
+        <div class="sidebar-glass">
+            <h5>Notifications</h5>
+            {% for note in notifications %}
+            <div class="ad-activity-item">
+                <div class="ad-activity-dot"></div>
+                <div>{{ note.message }}<span class="t">{{ note.created_at|timesince }} ago</span></div>
+            </div>
+            {% empty %}
+            <p class="ed-empty">Nothing new.</p>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 {% endblock %}

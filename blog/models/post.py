@@ -50,12 +50,20 @@ class Post(models.Model):
         max_length=20,
         choices=[
             ("draft", "Draft"),
-            ("pending", "Pending Approval"),
+            ("in_review", "In Review"),
+            ("needs_changes", "Needs Changes"),
+            ("approved", "Approved"),
             ("published", "Published"),
         ],
         default="draft",
         db_index=True,
     )
+    editor_feedback = models.TextField(blank=True, default="")
+    # Set manually whenever `status` transitions (not auto_now — an unrelated
+    # content edit must not bump this), so "submitted 5h ago" stays accurate.
+    status_changed_at = models.DateTimeField(null=True, blank=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    telegram_announced_at = models.DateTimeField(null=True, blank=True)
 
     seo_title = models.CharField(max_length=255, blank=True)
     seo_description = models.TextField(blank=True)

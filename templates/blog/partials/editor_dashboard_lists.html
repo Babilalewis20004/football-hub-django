@@ -1,52 +1,153 @@
-<h3>Pending Approval</h3>
-{% for post in pending %}
-    <div class="card p-3 mb-2">
-        <strong>{{ post.title }}</strong>
-        <span class="badge bg-warning text-dark">Pending</span>
-        <div class="mt-2 d-flex gap-2">
-            <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary">View</a>
-            <form action="{% url 'post_approve' slug=post.slug %}" method="POST" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-warning">Approve</button>
-            </form>
-            <form action="{% url 'post_publish' slug=post.slug %}" method="POST" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-success">Publish</button>
-            </form>
+{% load static %}
+<div class="ed-board">
+
+    <!-- DRAFT (includes needs_changes — back with the author) -->
+    <div class="ed-col">
+        <div class="ed-col-head">
+            <div class="ed-col-title"><span class="dot" style="background:#64748B"></span>Draft</div>
+            <div class="ed-col-count">{{ drafts.count }}</div>
+        </div>
+        {% for post in drafts %}
+        <div class="ed-card{% if post.status == 'needs_changes' %} ed-card--flag{% endif %}">
+            <div class="ed-thumb">
+                {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
+            </div>
+            <h3><a href="{% url 'post_detail' slug=post.slug %}">{{ post.title }}</a></h3>
+            <div class="ed-meta">{{ post.author.get_full_name|default:post.author.username }} · {{ post.status_changed_at|default:post.created_at|timesince }} ago</div>
+            {% if post.status == 'needs_changes' %}
+                <span class="ed-status-badge" style="background:#B42318;">Needs changes</span>
+            {% else %}
+                <span class="ed-status-badge" style="background:#64748B;">Draft</span>
+            {% endif %}
+            <div class="ed-actions">
+                <a href="{% url 'post_update' slug=post.slug %}" class="ed-action">Edit</a>
+                <a href="{% url 'post_delete' slug=post.slug %}" class="ed-action ed-action--danger">Delete</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="ed-empty">No drafts.</p>
+        {% endfor %}
+    </div>
+
+    <!-- IN REVIEW -->
+    <div class="ed-col">
+        <div class="ed-col-head">
+            <div class="ed-col-title"><span class="dot" style="background:#B45309"></span>In review</div>
+            <div class="ed-col-count">{{ in_review.count }}</div>
+        </div>
+        {% for post in in_review %}
+        <div class="ed-card">
+            <div class="ed-thumb">
+                {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
+            </div>
+            <h3><a href="{% url 'post_detail' slug=post.slug %}">{{ post.title }}</a></h3>
+            <div class="ed-meta">{{ post.author.get_full_name|default:post.author.username }} · submitted {{ post.status_changed_at|default:post.created_at|timesince }} ago</div>
+            <span class="ed-status-badge" style="background:#B45309;">In review</span>
+            <div class="ed-actions">
+                <a href="{% url 'post_update' slug=post.slug %}" class="ed-action">Edit</a>
+                <form action="{% url 'post_approve' slug=post.slug %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="ed-action ed-action--primary">Approve</button>
+                </form>
+                <details class="ed-feedback-details">
+                    <summary class="ed-action ed-action--ghost">Request changes</summary>
+                    <form action="{% url 'post_request_changes' slug=post.slug %}" method="POST" class="ed-feedback-form">
+                        {% csrf_token %}
+                        <textarea name="feedback" rows="3" placeholder="What needs to change before this can be approved?" required></textarea>
+                        <button type="submit" class="ed-action ed-action--danger">Send back</button>
+                    </form>
+                </details>
+                <a href="{% url 'post_delete' slug=post.slug %}" class="ed-action ed-action--danger">Delete</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="ed-empty">No posts awaiting review.</p>
+        {% endfor %}
+    </div>
+
+    <!-- APPROVED -->
+    <div class="ed-col">
+        <div class="ed-col-head">
+            <div class="ed-col-title"><span class="dot" style="background:#4338CA"></span>Approved</div>
+            <div class="ed-col-count">{{ approved.count }}</div>
+        </div>
+        {% for post in approved %}
+        <div class="ed-card">
+            <div class="ed-thumb">
+                {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
+            </div>
+            <h3><a href="{% url 'post_detail' slug=post.slug %}">{{ post.title }}</a></h3>
+            <div class="ed-meta">{{ post.author.get_full_name|default:post.author.username }} · approved {{ post.status_changed_at|default:post.created_at|timesince }} ago</div>
+            <span class="ed-status-badge" style="background:#4338CA;">Approved</span>
+            <div class="ed-telegram-row">
+                <span class="ed-tg-icon ed-tg-pending">·</span>
+                <span>Will announce to Telegram on publish</span>
+            </div>
+            <div class="ed-actions">
+                <a href="{% url 'post_update' slug=post.slug %}" class="ed-action">Edit</a>
+                <form action="{% url 'post_publish' slug=post.slug %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="ed-action ed-action--primary">Publish</button>
+                </form>
+                <a href="{% url 'post_delete' slug=post.slug %}" class="ed-action ed-action--danger">Delete</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="ed-empty">Nothing waiting to publish.</p>
+        {% endfor %}
+    </div>
+
+    <!-- PUBLISHED -->
+    <div class="ed-col">
+        <div class="ed-col-head">
+            <div class="ed-col-title"><span class="dot" style="background:#15803D"></span>Published</div>
+            <div class="ed-col-count">{{ published.count }}</div>
+        </div>
+        {% for post in published %}
+        <div class="ed-card">
+            <div class="ed-thumb">
+                {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
+            </div>
+            <h3><a href="{% url 'post_detail' slug=post.slug %}">{{ post.title }}</a></h3>
+            <div class="ed-meta">{{ post.author.get_full_name|default:post.author.username }} · published {{ post.published_at|default:post.status_changed_at|default:post.created_at|timesince }} ago</div>
+            <span class="ed-status-badge" style="background:#15803D;">Published</span>
+            <div class="ed-telegram-row">
+                {% if post.telegram_announced_at %}
+                    <span class="ed-tg-icon ed-tg-sent">✓</span>
+                    <span>Announced to channel</span>
+                {% else %}
+                    <span class="ed-tg-icon ed-tg-pending">·</span>
+                    <span>Not announced — bot token unset</span>
+                {% endif %}
+            </div>
+            <div class="ed-actions">
+                <a href="{% url 'post_update' slug=post.slug %}" class="ed-action">Edit</a>
+                <a href="{% url 'post_delete' slug=post.slug %}" class="ed-action ed-action--danger">Delete</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="ed-empty">No published posts yet.</p>
+        {% endfor %}
+    </div>
+
+</div>
+
+<div class="ed-activity-panel">
+    <h4>Recent activity</h4>
+    {% for post in recent_activity %}
+    <div class="ed-activity-item">
+        <div class="ed-activity-dot"></div>
+        <div>
+            {% if post.status == 'draft' %}"{{ post.title }}" saved as a draft
+            {% elif post.status == 'in_review' %}"{{ post.title }}" submitted for review
+            {% elif post.status == 'needs_changes' %}Changes requested on "{{ post.title }}"
+            {% elif post.status == 'approved' %}"{{ post.title }}" approved
+            {% elif post.status == 'published' %}"{{ post.title }}" published{% if post.telegram_announced_at %} and announced to Telegram{% endif %}
+            {% endif %}
+            <span class="t">{{ post.status_changed_at|default:post.created_at|timesince }} ago</span>
         </div>
     </div>
-{% empty %}
-    <p>No posts awaiting approval.</p>
-{% endfor %}
-
-<hr>
-
-<h3>Drafts</h3>
-{% for post in drafts %}
-    <div class="card p-3 mb-2">
-        <strong>{{ post.title }}</strong>
-        <span class="badge bg-secondary">Draft</span>
-        <div class="mt-2 d-flex gap-2">
-            <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary">View</a>
-            <form action="{% url 'post_approve' slug=post.slug %}" method="POST" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-warning">Approve</button>
-            </form>
-        </div>
-    </div>
-{% empty %}
-    <p>No drafts.</p>
-{% endfor %}
-
-<hr>
-
-<h3>Recently Published</h3>
-{% for post in published %}
-    <div class="card p-3 mb-2">
-        <strong>{{ post.title }}</strong>
-        <span class="badge bg-success">Published</span>
-        <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary mt-2">View</a>
-    </div>
-{% empty %}
-    <p>No published posts yet.</p>
-{% endfor %}
+    {% empty %}
+    <p class="ed-empty">No activity yet.</p>
+    {% endfor %}
+</div>

@@ -1,0 +1,34 @@
+{% if latest_posts %}
+<section class="mb-5">
+    <div class="section-head">
+        <h2>Latest</h2>
+    </div>
+
+    <div class="latest-list">
+        {% for post in latest_posts %}
+            <a href="{{ post.get_absolute_url }}" class="latest-row">
+                <span class="latest-num">{{ forloop.counter|stringformat:"02d" }}</span>
+
+                {% if post.featured_image %}
+                    <img src="{{ post.featured_image.url }}" alt="" class="latest-thumb">
+                {% else %}
+                    <span class="latest-thumb latest-thumb-empty"></span>
+                {% endif %}
+
+                <div class="latest-body">
+                    {% if post.category %}
+                        <span class="latest-tag">{{ post.category.name }}</span>
+                    {% endif %}
+
+                    <h3>{{ post.title }}</h3>
+
+                    <div class="latest-meta">
+                        {{ post.author.get_full_name|default:post.author.username }}
+                        &middot; {{ post.created_at|timesince }} ago
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

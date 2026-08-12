@@ -13,20 +13,23 @@ def send_new_post_announcement(post, absolute_url):
 
     Best-effort: disabled when no token/channel is configured, and any
     Telegram-side failure is logged rather than raised, so a bot outage
-    can never block an editor from publishing a post.
+    can never block an editor from publishing a post. Returns True only
+    when the message actually sent, so callers can record that fact.
     """
     token = settings.TELEGRAM_BOT_TOKEN
     channel_id = settings.TELEGRAM_CHANNEL_ID
 
     if not token or not channel_id:
-        return
+        return False
 
     text = f"🆕 {post.title}\n\n{post.excerpt}\n\n{absolute_url}"
 
     try:
         asyncio.run(_send_message(token, channel_id, text))
+        return True
     except TelegramError:
         logger.exception(f"Failed to send Telegram announcement for post: {post.title}")
+        return False
 
 
 async def _send_message(token, channel_id, text):

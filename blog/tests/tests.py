@@ -630,6 +630,97 @@ class IntegrationTests(BaseTestCase):
         self.assertEqual(bookmark.post, self.post)
 
     def test_database_integrity(self):
-        self.assertEqual(Post.objects.count(), 1)              
+        self.assertEqual(Post.objects.count(), 1)
+
+
+class PostWorkflowTransitionTests(BaseTestCase):
+    """Covers the submit-for-review / withdraw / request-changes transitions
+    added alongside the editor & author dashboard redesign."""
+
+    def setUp(self):
+        super().setUp()
+
+        self.editor = User.objects.create_user(
+            username="editor",
+            email="editor@test.com",
+            password="Password123!"
+        )
+        self.editor.groups.add(Group.objects.get(name="Editor"))
+
+        self.other_author = User.objects.create_user(
+            username="other_author",
+            email="other_author@test.com",
+            password="Password123!"
+        )
+        self.other_author.groups.add(Group.objects.get(name="Author"))
+
+        self.draft = Post.objects.create(
+            title="A Draft Post For Review",
+            author=self.author,
+            category=self.category,
+            content="Draft content.",
+        )
+
+    def test_author_can_submit_draft_for_review(self):
+        self.client.login(username="author", password="Password123!")
+        response = self.client.post(
+            reverse("post_submit_for_review", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "in_review")
+        self.assertIsNotNone(self.draft.status_changed_at)
+
+    def test_non_owner_cannot_submit_for_review(self):
+        self.client.login(username="other_author", password="Password123!")
+        response = self.client.post(
+            reverse("post_submit_for_review", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 403)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "draft")
+
+    def test_author_can_withdraw_from_review(self):
+        self.draft.status = "in_review"
+        self.draft.save()
+
+        self.client.login(username="author", password="Password123!")
+        response = self.client.post(
+            reverse("post_withdraw_from_review", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "draft")
+
+    def test_editor_can_request_changes_with_feedback(self):
+        self.draft.status = "in_review"
+        self.draft.save()
+
+        self.client.login(username="editor", password="Password123!")
+        response = self.client.post(
+            reverse("post_request_changes", kwargs={"slug": self.draft.slug}),
+            {"feedback": "Please add a source for the transfer fee."},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "needs_changes")
+        self.assertFalse(self.draft.is_approved)
+        self.assertEqual(
+            self.draft.editor_feedback,
+            "Please add a source for the transfer fee."
+        )
+
+    def test_author_can_resubmit_after_needs_changes(self):
+        self.draft.status = "needs_changes"
+        self.draft.editor_feedback = "Fix the typo."
+        self.draft.save()
+
+        self.client.login(username="author", password="Password123!")
+        response = self.client.post(
+            reverse("post_submit_for_review", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "in_review")
 
         

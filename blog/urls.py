@@ -8,6 +8,9 @@ from blog.views.posts import (
     post_delete,
     post_publish,
     post_approve,
+    post_request_changes,
+    post_submit_for_review,
+    post_withdraw_from_review,
     editor_dashboard,
     author_dashboard,
     editor_dashboard_partial,
@@ -37,6 +40,9 @@ urlpatterns = [
     path('post/<slug:slug>/delete/', post_delete, name='post_delete'),
     path("post/<slug:slug>/publish/", post_publish, name="post_publish"),
     path("post/<slug:slug>/approve/", post_approve, name="post_approve"),
+    path("post/<slug:slug>/request-changes/", post_request_changes, name="post_request_changes"),
+    path("post/<slug:slug>/submit-review/", post_submit_for_review, name="post_submit_for_review"),
+    path("post/<slug:slug>/withdraw/", post_withdraw_from_review, name="post_withdraw_from_review"),
 
     # Dynamic last
     path('post/<slug:slug>/', post_detail, name='post_detail'),

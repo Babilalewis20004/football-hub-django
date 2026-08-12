@@ -1,36 +1,111 @@
-<h3>Drafts</h3>
+{% for post in needs_changes %}
+<div class="ad-row ad-row--flag">
+    <div class="ad-thumb">
+        {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
+    </div>
+    <div class="ad-body">
+        <div class="ad-top">
+            <h3>{{ post.title }}</h3>
+            <span class="ad-status-badge" style="background:#B42318;">Needs changes</span>
+        </div>
+        <div class="ad-meta">Reviewed {{ post.status_changed_at|default:post.created_at|timesince }} ago</div>
+        {% if post.editor_feedback %}
+        <div class="ad-feedback-box">
+            <b>Editor feedback</b>
+            {{ post.editor_feedback }}
+        </div>
+        {% endif %}
+        <div class="ad-actions">
+            <a href="{% url 'post_update' slug=post.slug %}" class="ad-action ad-action--primary">Edit</a>
+            <form action="{% url 'post_submit_for_review' slug=post.slug %}" method="POST" class="ad-inline-form">
+                {% csrf_token %}
+                <button type="submit" class="ad-action ad-action--primary">Resubmit for review</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% for post in drafts %}
-    <div class="card p-3 mb-2">
-        <strong>{{ post.title }}</strong>
-        <span class="badge bg-secondary">Draft</span>
-        <a href="{% url 'post_update' slug=post.slug %}" class="btn btn-sm btn-primary mt-2">Edit</a>
+<div class="ad-row">
+    <div class="ad-thumb">
+        {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
     </div>
+    <div class="ad-body">
+        <div class="ad-top">
+            <h3>{{ post.title }}</h3>
+            <span class="ad-status-badge" style="background:#64748B;">Draft</span>
+        </div>
+        <div class="ad-meta">Last edited {{ post.updated_at|timesince }} ago</div>
+        <div class="ad-actions">
+            <a href="{% url 'post_update' slug=post.slug %}" class="ad-action">Continue editing</a>
+            <form action="{% url 'post_submit_for_review' slug=post.slug %}" method="POST" class="ad-inline-form">
+                {% csrf_token %}
+                <button type="submit" class="ad-action ad-action--ghost">Submit for review</button>
+            </form>
+            <a href="{% url 'post_delete' slug=post.slug %}" class="ad-action ad-action--link ad-action--danger">Delete</a>
+        </div>
+    </div>
+</div>
 {% empty %}
-    <p>No drafts.</p>
+{% if not needs_changes %}<p class="ed-empty">No drafts.</p>{% endif %}
 {% endfor %}
 
-<hr>
-
-<h3>Pending Approval</h3>
-{% for post in pending %}
-    <div class="card p-3 mb-2">
-        <strong>{{ post.title }}</strong>
-        <span class="badge bg-warning text-dark">Pending</span>
-        <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary mt-2">View</a>
+{% for post in in_review %}
+<div class="ad-row">
+    <div class="ad-thumb">
+        {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
     </div>
+    <div class="ad-body">
+        <div class="ad-top">
+            <h3>{{ post.title }}</h3>
+            {% if post.status == 'approved' %}
+                <span class="ad-status-badge" style="background:#4338CA;">Approved — awaiting publish</span>
+            {% else %}
+                <span class="ad-status-badge" style="background:#B45309;">In review</span>
+            {% endif %}
+        </div>
+        <div class="ad-meta">Submitted {{ post.status_changed_at|default:post.created_at|timesince }} ago · awaiting editor</div>
+        <div class="ad-actions">
+            <a href="{% url 'post_detail' slug=post.slug %}" class="ad-action">View</a>
+            {% if post.status == 'in_review' %}
+            <form action="{% url 'post_withdraw_from_review' slug=post.slug %}" method="POST" class="ad-inline-form">
+                {% csrf_token %}
+                <button type="submit" class="ad-action ad-action--link">Withdraw from review</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% empty %}
-    <p>No pending posts.</p>
+<p class="ed-empty">No posts in review.</p>
 {% endfor %}
 
-<hr>
-
-<h3>Published</h3>
 {% for post in published %}
-    <div class="card p-3 mb-2">
-        <strong>{{ post.title }}</strong>
-        <span class="badge bg-success">Published</span>
-        <a href="{% url 'post_detail' slug=post.slug %}" class="btn btn-sm btn-secondary mt-2">View</a>
+<div class="ad-row">
+    <div class="ad-thumb">
+        {% if post.featured_image %}<img src="{{ post.featured_image.url }}" alt="">{% else %}<span>No image</span>{% endif %}
     </div>
+    <div class="ad-body">
+        <div class="ad-top">
+            <h3>{{ post.title }}</h3>
+            <span class="ad-status-badge" style="background:#15803D;">Published</span>
+        </div>
+        <div class="ad-meta">Published {{ post.published_at|default:post.status_changed_at|default:post.created_at|timesince }} ago</div>
+        <div class="ad-telegram-row">
+            {% if post.telegram_announced_at %}
+                <span class="ad-tg-icon ad-tg-sent">✓</span>
+                <span>Announced to channel</span>
+            {% else %}
+                <span class="ad-tg-icon ad-tg-pending">·</span>
+                <span>Not announced — bot token unset</span>
+            {% endif %}
+        </div>
+        <div class="ad-actions">
+            <a href="{% url 'post_detail' slug=post.slug %}" class="ad-action ad-action--link">View live</a>
+        </div>
+    </div>
+</div>
 {% empty %}
-    <p>No published posts yet.</p>
+<p class="ed-empty">No published posts yet.</p>
 {% endfor %}

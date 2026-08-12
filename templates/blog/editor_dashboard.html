@@ -8,7 +8,17 @@
 {% url 'dashboard' as dashboard_url %}
 {% include "components/back_button.html" with fallback_url=dashboard_url %}
 
-<h1>Editor Dashboard</h1>
+<div class="ed-header">
+    <div>
+        <h1 class="ed-title">Editorial Workflow</h1>
+        <p class="ed-subtitle">Posts moving through review, grouped by status.</p>
+    </div>
+    <form class="ed-search" method="GET" action="{% url 'editor_dashboard' %}">
+        {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+        <i class="bi bi-search"></i>
+        <input type="text" name="q" value="{{ query }}" placeholder="Search posts…">
+    </form>
+</div>
 
 {% if notifications %}
 <div class="alert alert-info mb-3">
@@ -20,9 +30,23 @@
 </div>
 {% endif %}
 
+<div class="ed-filters">
+    {% url 'editor_dashboard' as ed_url %}
+    <a href="{{ ed_url }}{% if query %}?q={{ query|urlencode }}{% endif %}"
+       class="ed-chip{% if not status_filter %} active{% endif %}">All <span class="n">{{ counts.all }}</span></a>
+    <a href="{{ ed_url }}?status=draft{% if query %}&q={{ query|urlencode }}{% endif %}"
+       class="ed-chip{% if status_filter == 'draft' %} active{% endif %}"><span class="dot" style="background:#64748B"></span>Draft <span class="n">{{ counts.draft }}</span></a>
+    <a href="{{ ed_url }}?status=in_review{% if query %}&q={{ query|urlencode }}{% endif %}"
+       class="ed-chip{% if status_filter == 'in_review' %} active{% endif %}"><span class="dot" style="background:#B45309"></span>In review <span class="n">{{ counts.in_review }}</span></a>
+    <a href="{{ ed_url }}?status=approved{% if query %}&q={{ query|urlencode }}{% endif %}"
+       class="ed-chip{% if status_filter == 'approved' %} active{% endif %}"><span class="dot" style="background:#4338CA"></span>Approved <span class="n">{{ counts.approved }}</span></a>
+    <a href="{{ ed_url }}?status=published{% if query %}&q={{ query|urlencode }}{% endif %}"
+       class="ed-chip{% if status_filter == 'published' %} active{% endif %}"><span class="dot" style="background:#15803D"></span>Published <span class="n">{{ counts.published }}</span></a>
+</div>
+
 <div
     id="editor-dashboard-lists"
-    hx-get="{% url 'editor_dashboard_partial' %}"
+    hx-get="{% url 'editor_dashboard_partial' %}?status={{ status_filter }}&q={{ query|urlencode }}"
     hx-trigger="load, every 10s"
     hx-target="#editor-dashboard-lists"
     hx-swap="innerHTML"
@@ -31,4 +55,3 @@
 </div>
 
 {% endblock %}
-

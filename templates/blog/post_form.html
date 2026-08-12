@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ title }} | Football Hub{% endblock %}
 {% block robots %}noindex, nofollow{% endblock %}
@@ -12,11 +13,27 @@
     <div class="post-form-card">
 
         <div class="post-form-header">
-            <i class="bi bi-pencil-square"></i>
-            <h2>{{ title }}</h2>
+            <div class="post-form-header-title">
+                <i class="bi bi-pencil-square"></i>
+                <h2>{{ title }}</h2>
+            </div>
+
+            {% if post %}
+                {% if post.status == "draft" %}
+                    <span class="badge bg-secondary">Draft</span>
+                {% elif post.status == "in_review" %}
+                    <span class="badge bg-warning text-dark">In Review</span>
+                {% elif post.status == "needs_changes" %}
+                    <span class="badge" style="background:#B42318;">Needs Changes</span>
+                {% elif post.status == "approved" %}
+                    <span class="badge" style="background:#4338CA;">Approved</span>
+                {% elif post.status == "published" %}
+                    <span class="badge bg-success">Published</span>
+                {% endif %}
+            {% endif %}
         </div>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
             {% if form.errors %}
@@ -25,17 +42,45 @@
                 </div>
             {% endif %}
 
-            <!-- POST DETAILS -->
+            <!-- TITLE -->
             <div class="form-section">
                 <div class="form-section-title">
-                    <i class="bi bi-file-text"></i> Post Details
+                    <i class="bi bi-type"></i> Title
                 </div>
 
                 <div class="form-field">
-                    <label class="form-label">Title</label>
                     {{ form.title }}
                 </div>
+            </div>
 
+            <!-- FEATURED IMAGE -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-image"></i> Featured Image
+                </div>
+
+                <div class="image-upload">
+                    <div class="image-dropzone" id="imageDropzone" tabindex="0" role="button" aria-label="Upload featured image">
+                        {% if post.featured_image %}
+                            <img src="{{ post.featured_image.url }}" alt="" class="image-dropzone-preview" id="imageDropzonePreview">
+                        {% else %}
+                            <img src="" alt="" class="image-dropzone-preview d-none" id="imageDropzonePreview">
+                        {% endif %}
+
+                        <div class="image-dropzone-placeholder" id="imageDropzonePlaceholder" {% if post.featured_image %}style="display:none;"{% endif %}>
+                            <span class="image-dropzone-icon"><i class="bi bi-cloud-arrow-up"></i></span>
+                            <span>Drop an image here, or click to upload</span>
+                        </div>
+                    </div>
+
+                    <div class="image-upload-controls">
+                        {{ form.featured_image }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORY & TAGS -->
+            <div class="form-section">
                 <div class="form-grid">
                     <div class="form-field">
                         <label class="form-label">Category</label>
@@ -47,39 +92,28 @@
                         {{ form.tags }}
                     </div>
                 </div>
+            </div>
+
+            <!-- BODY -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-file-text"></i> Body
+                </div>
 
                 <div class="form-field">
-                    <label class="form-label">Content</label>
                     {{ form.content }}
+                </div>
+            </div>
+
+            <!-- SUMMARY & SEO -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-search"></i> Summary &amp; SEO
                 </div>
 
                 <div class="form-field">
                     <label class="form-label">Excerpt</label>
                     {{ form.excerpt }}
-                </div>
-            </div>
-
-            <!-- FEATURED IMAGE -->
-            <div class="form-section">
-                <div class="form-section-title">
-                    <i class="bi bi-image"></i> Featured Image
-                </div>
-
-                <div class="image-upload">
-                    {{ form.featured_image }}
-
-                    {% if post.featured_image %}
-                        <div class="image-preview">
-                            <img src="{{ post.featured_image.url }}" alt="" loading="lazy">
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- SEO SETTINGS -->
-            <div class="form-section">
-                <div class="form-section-title">
-                    <i class="bi bi-search"></i> SEO Settings
                 </div>
 
                 <div class="form-field">
@@ -93,21 +127,6 @@
                 </div>
             </div>
 
-            <!-- PUBLISH -->
-            <div class="form-section">
-                <div class="publish-toggle">
-                    <div class="publish-toggle-text">
-                        <strong>Publish this post</strong>
-                        <span>Visible to readers once saved</span>
-                    </div>
-
-                    <label class="toggle-switch">
-                        {{ form.is_published }}
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
-
             <div class="form-actions">
                 <a href="{% url 'dashboard' %}" class="btn btn-cancel">Cancel</a>
                 <button class="btn btn-save" type="submit">Save</button>
@@ -117,4 +136,6 @@
 
     </div>
 </div>
+
+<script src="{% static 'js/post-form.js' %}" defer></script>
 {% endblock %}

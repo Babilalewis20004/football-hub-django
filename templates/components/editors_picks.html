@@ -1,0 +1,30 @@
+{% if editors_picks %}
+<section class="mb-5">
+    <div class="section-head">
+        <h2>Editors&rsquo; picks</h2>
+    </div>
+
+    <div class="grid-3">
+        {% for post in editors_picks %}
+            <a href="{{ post.get_absolute_url }}" class="article-card story-card">
+                {% if post.featured_image %}
+                    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+                {% endif %}
+
+                <div class="story-card-body">
+                    {% if post.category %}
+                        <span class="story-card-tag">{{ post.category.name }}</span>
+                    {% endif %}
+
+                    <h3>{{ post.title }}</h3>
+
+                    <div class="story-card-meta">
+                        {{ post.author.get_full_name|default:post.author.username }}
+                        &middot; {{ post.created_at|timesince }} ago
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

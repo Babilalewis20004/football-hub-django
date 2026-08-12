@@ -1,24 +1,49 @@
+{% if hero_post %}
 <section id="hero-section" class="hero-grid mb-5">
 
-    <div class="hero-left">
+    <a href="{{ hero_post.get_absolute_url }}" class="hero-left">
         {% if hero_post.featured_image %}
             <img src="{{ hero_post.featured_image.url }}" alt="{{ hero_post.title }}">
         {% endif %}
 
+        {% if hero_post.category %}
+            <span class="hero-kicker">{{ hero_post.category.name }}</span>
+        {% endif %}
+
         <h1>{{ hero_post.title }}</h1>
 
-        <div class="hero-cta">
-            <a href="#">Latest News</a>
-            <a href="#">Match Reports</a>
-            <a href="#">Predictions</a>
-        </div>
-    </div>
+        {% if hero_post.excerpt %}
+            <p class="hero-dek">{{ hero_post.excerpt|truncatewords:26 }}</p>
+        {% endif %}
 
+        <div class="hero-meta">
+            {{ hero_post.author.get_full_name|default:hero_post.author.username }}
+            &middot; {{ hero_post.created_at|timesince }} ago
+        </div>
+    </a>
+
+    {% if hero_side_posts %}
     <div class="hero-right">
-        <div class="hero-card">Fixtures</div>
-        <div class="hero-card">Standings</div>
-        <div class="hero-card">Transfers</div>
-        <div class="hero-card">Predictions</div>
+        {% for post in hero_side_posts %}
+            <a href="{{ post.get_absolute_url }}" class="hero-card">
+                {% if post.featured_image %}
+                    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="hero-card-thumb">
+                {% endif %}
+
+                {% if post.category %}
+                    <span class="hero-card-tag">{{ post.category.name }}</span>
+                {% endif %}
+
+                <h3>{{ post.title }}</h3>
+
+                <div class="hero-card-meta">
+                    {{ post.author.get_full_name|default:post.author.username }}
+                    &middot; {{ post.created_at|timesince }} ago
+                </div>
+            </a>
+        {% endfor %}
     </div>
+    {% endif %}
 
 </section>
+{% endif %}
