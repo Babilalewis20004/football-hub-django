@@ -12,6 +12,7 @@ from blog.models import Post, Notification, Bookmark
 from blog.forms import PostForm, CommentForm
 from blog.services.posts import get_related_posts, can_view_post
 from blog.services.comments import create_comment
+from blog.services.telegram import send_new_post_announcement
 
 
 # ---------------------------------------------------------
@@ -165,6 +166,8 @@ def post_publish(request, slug):
     user=post.author,
     message=f"Your post '{post.title}' is now published!"
     )
+
+    send_new_post_announcement(post, request.build_absolute_uri(post.get_absolute_url()))
 
     logger.info(f"Post published: {post.title} by {request.user.username}")
     return redirect("post_detail", slug=post.slug)

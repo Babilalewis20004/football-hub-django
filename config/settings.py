@@ -279,6 +279,12 @@ EMAIL_BACKEND = config(
 )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@footballhub.local")
 
+# Optional: posts a message to a Telegram channel whenever a post is
+# published (see blog.services.telegram). Leave both unset to disable —
+# announcements are skipped silently rather than failing the publish action.
+TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN", default="")
+TELEGRAM_CHANNEL_ID = config("TELEGRAM_CHANNEL_ID", default="")
+
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
