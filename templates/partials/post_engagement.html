@@ -1,0 +1,68 @@
+<div id="ig-engagement">
+
+    <div class="ig-action-bar">
+        <div class="ig-action-left">
+
+            {% if user.is_authenticated %}
+                <button
+                    type="button"
+                    hx-post="{% url 'like_post' post.slug %}"
+                    hx-target="#ig-engagement"
+                    hx-swap="outerHTML"
+                    class="ig-icon-btn {% if user in post.likes.all %}ig-icon-btn-liked{% endif %}"
+                    aria-pressed="{% if user in post.likes.all %}true{% else %}false{% endif %}"
+                    aria-label="{% if user in post.likes.all %}Unlike this post{% else %}Like this post{% endif %}"
+                >
+                    <i class="bi {% if user in post.likes.all %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                </button>
+            {% else %}
+                <a href="{% url 'login' %}?next={{ post.get_absolute_url }}"
+                   class="ig-icon-btn"
+                   aria-label="Login to like this post">
+                    <i class="bi bi-heart"></i>
+                </a>
+            {% endif %}
+
+            <a href="#ig-comments" class="ig-icon-btn" aria-label="View comments">
+                <i class="bi bi-chat"></i>
+            </a>
+
+            <button type="button" id="igShareBtn" class="ig-icon-btn"
+                    aria-label="Share this post"
+                    data-share-url="{{ request.scheme }}://{{ request.get_host }}{{ post.get_absolute_url }}"
+                    data-share-title="{{ post.title }}">
+                <i class="bi bi-send"></i>
+            </button>
+
+        </div>
+
+        <div class="ig-action-right">
+            {% if user.is_authenticated %}
+                <button
+                    type="button"
+                    hx-post="{% url 'bookmark_post' slug=post.slug %}"
+                    hx-target="#ig-engagement"
+                    hx-swap="outerHTML"
+                    class="ig-icon-btn {% if is_bookmarked %}ig-icon-btn-saved{% endif %}"
+                    aria-pressed="{% if is_bookmarked %}true{% else %}false{% endif %}"
+                    aria-label="{% if is_bookmarked %}Remove bookmark{% else %}Bookmark this post{% endif %}"
+                >
+                    <i class="bi {% if is_bookmarked %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i>
+                </button>
+            {% else %}
+                <a href="{% url 'login' %}?next={{ post.get_absolute_url }}"
+                   class="ig-icon-btn"
+                   aria-label="Login to bookmark this post">
+                    <i class="bi bi-bookmark"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="ig-likes-count">
+        {{ post.likes.count }} like{{ post.likes.count|pluralize }}
+        <span class="ig-dot">·</span>
+        {{ post.views }} view{{ post.views|pluralize }}
+    </div>
+
+</div>

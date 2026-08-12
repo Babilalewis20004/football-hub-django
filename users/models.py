@@ -10,7 +10,7 @@ class CustomUser(AbstractUser):
 
     avatar = models.ImageField(
         upload_to='avatars/',
-        default='avatars/default.png',
+        default='avatars/default.jpg',
         blank=True
     )
 

@@ -60,9 +60,11 @@
                         Subscribe to receive the latest football news.
                     </p>
 
-                    <form>
+                    <form action="{% url 'subscribe' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
                         <div class="input-group">
-                            <input type="email" class="form-control" placeholder="Your email">
+                            <input type="email" name="email" class="form-control" placeholder="Your email" required>
                             <button class="btn btn-warning" type="submit">Subscribe</button>
                         </div>
                     </form>

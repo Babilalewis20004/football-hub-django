@@ -9,7 +9,15 @@
 <div class="register-wrapper">
     <div class="glass-card">
 
+        <div class="auth-badge">
+            <i class="bi bi-trophy-fill"></i>
+        </div>
+
         <h2 class="neon-title">Create Your Account</h2>
+
+        <p class="register-subtitle">
+            Join Football Hub for your dashboard, saved posts & personalized content.
+        </p>
 
         {% if messages %}
             {% for message in messages %}
@@ -28,16 +36,10 @@
                 <div id="strength-bar"></div>
             </div>
 
-            <button class="neon-btn" type="submit">
-                Register
+            <button class="neon-btn" type="submit" id="registerSubmitBtn">
+                <span class="btn-spinner d-none" id="registerSpinner"></span>
+                <span id="registerBtnText"><i class="bi bi-person-plus-fill me-1"></i> Register</span>
             </button>
-
-            <div class="social-login">
-                <p>Or continue with</p>
-                <button class="social-btn google">Google</button>
-                <button class="social-btn facebook">Facebook</button>
-                <button class="social-btn twitter">Twitter</button>
-            </div>
 
         </form>
 
@@ -45,6 +47,21 @@
 </div>
 
 <script src="{% static 'js/password-strength.js' %}"></script>
+
+<script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('registerForm');
+        var btn = document.getElementById('registerSubmitBtn');
+        var spinner = document.getElementById('registerSpinner');
+        var text = document.getElementById('registerBtnText');
+
+        form.addEventListener('submit', function () {
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            text.textContent = 'Creating account…';
+        });
+    });
+</script>
 
 
 {% endblock %}

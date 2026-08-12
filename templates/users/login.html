@@ -9,17 +9,19 @@
 <div class="login-wrapper d-flex justify-content-center align-items-center">
     <div class="login-box">
 
-        <h2 class="login-title">
-            <i class="bi bi-person-circle"></i>
-            Login to Football Hub
-        </h2>
+        <div class="auth-badge">
+            <i class="bi bi-trophy-fill"></i>
+        </div>
+
+        <h2 class="login-title">Welcome Back</h2>
 
         <p class="login-subtitle">
-            Access your dashboard, saved posts & personalized football content.
+            Sign in to continue to Football Hub.
         </p>
 
         <form method="POST" action="{% url 'login' %}">
             {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
             {% if error %}
             <div class="alert alert-danger mt-2">
@@ -45,6 +47,11 @@
                     <option value="author">Author</option>
                     <option value="reader">Reader</option>
                 </select>
+                <div class="form-text">
+                    This is the role your account was set up with, not what you'd like to do today —
+                    pick the wrong one and login will fail. Not sure? Check the welcome email from
+                    when your account was created, or ask whoever registered you.
+                </div>
             </div>
 
             {% if captcha_form %}
@@ -55,8 +62,9 @@
             </div>
             {% endif %}
 
-            <button type="submit" class="btn btn-login w-100 mt-3">
-                Login
+            <button type="submit" class="btn btn-login w-100 mt-3" id="loginSubmitBtn">
+                <span class="btn-spinner d-none" id="loginSpinner"></span>
+                <span id="loginBtnText"><i class="bi bi-box-arrow-in-right me-1"></i> Sign In</span>
             </button>
 
             <p class="login-footer mt-3">
@@ -72,5 +80,20 @@
 
     </div>
 </div>
+
+<script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.querySelector('.login-box form');
+        var btn = document.getElementById('loginSubmitBtn');
+        var spinner = document.getElementById('loginSpinner');
+        var text = document.getElementById('loginBtnText');
+
+        form.addEventListener('submit', function () {
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            text.textContent = 'Logging in…';
+        });
+    });
+</script>
 
 {% endblock %}

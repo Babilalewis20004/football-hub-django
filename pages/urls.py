@@ -8,6 +8,7 @@ from pages.views import (
     CareersView,
     ContactUsView,
     feedback_view,
+    subscribe_view,
 )
 
 urlpatterns = [
@@ -18,4 +19,5 @@ urlpatterns = [
     path('careers/', CareersView.as_view(), name='careers'),
     path('contact-us/', ContactUsView.as_view(), name='contact_us'),
     path('feedback/', feedback_view, name='feedback'),
+    path('subscribe/', subscribe_view, name='subscribe'),
 ]

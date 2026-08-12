@@ -27,10 +27,15 @@ def like_post(request, slug):
         post.likes.add(request.user)
         logger.info(f"{request.user.username} liked post: {post.slug}")
 
-    # Render ONLY the like section partial
+    is_bookmarked = Bookmark.objects.filter(user=request.user, post=post).exists()
+
+    # Re-render the whole engagement block (like/comment/share/bookmark icons
+    # + the likes/views count line) so the count stays in sync with the icon
+    # state in a single HTMX swap, instead of drifting out of sync with a
+    # narrower partial that only covered the button itself.
     html = render_to_string(
-        "partials/like_button.html",
-        {"post": post, "user": request.user},
+        "partials/post_engagement.html",
+        {"post": post, "user": request.user, "is_bookmarked": is_bookmarked},
         request=request,
     )
 
@@ -52,13 +57,8 @@ def bookmark_post(request, slug):
         logger.info(f"{request.user.username} removed bookmark from post: {post.slug}")
 
     html = render_to_string(
-        "partials/bookmark_button.html",
-        {
-            "post": post,
-            "user": request.user,
-            "is_bookmarked": created,
-            "bookmark_count": post.bookmarked_by.count(),
-        },
+        "partials/post_engagement.html",
+        {"post": post, "user": request.user, "is_bookmarked": created},
         request=request,
     )
 

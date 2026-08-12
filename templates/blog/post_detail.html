@@ -18,83 +18,67 @@
 
 <div class="post-container">
 
-<!-- Header -->
-<header class="post-header mb-4">
-    <h1 class="post-title d-flex align-items-center gap-3">
-    {{ post.title }}
+<div class="ig-post-card">
 
-    {% if post.status == "draft" %}
-        <span class="badge bg-secondary">Draft</span>
-    {% elif post.status == "pending" %}
-        <span class="badge bg-warning text-dark">Pending Approval</span>
-    {% elif post.status == "published" %}
-        <span class="badge bg-success">Published</span>
-    {% endif %}
-</h1>
+    <!-- Account-style header -->
+    <div class="ig-post-header">
+        {% if post.author.avatar %}
+            <img src="{{ post.author.avatar.url }}" alt="" class="ig-avatar">
+        {% else %}
+            <span class="ig-avatar ig-avatar-fallback" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
+        {% endif %}
+        <div class="ig-header-meta">
+            <span class="ig-username">{{ post.author.get_full_name|default:post.author.username }}</span>
+            <span class="ig-timestamp">
+                {{ post.created_at|timesince }} ago
+                {% if post.updated_at != post.created_at %}
+                    <span class="ig-dot">·</span> Edited {{ post.updated_at|timesince }} ago
+                {% endif %}
+            </span>
+        </div>
 
-
-    <div class="post-meta-info text-muted mb-3 d-flex align-items-center gap-4">
-
-        <!-- Author -->
-        <span class="meta-item">
-            <i class="fa fa-user"></i>
-            {{ post.author.get_full_name|default:post.author.username }}
-        </span>
-
-        <!-- Time since published -->
-        <span class="meta-item">
-            <i class="fa fa-clock"></i>
-            {{ post.created_at|timesince }} ago
-        </span>
-
-        <!-- Updated time (only if different) -->
-        {% if post.updated_at != post.created_at %}
-        <span class="meta-item text-muted">
-            <i class="fa fa-edit"></i>
-            Updated {{ post.updated_at|timesince }} ago
-        </span>
+        {% if post.status == "draft" %}
+            <span class="badge bg-secondary ms-auto">Draft</span>
+        {% elif post.status == "pending" %}
+            <span class="badge bg-warning text-dark ms-auto">Pending Approval</span>
+        {% elif post.status == "published" %}
+            <span class="badge bg-success ms-auto">Published</span>
         {% endif %}
     </div>
-</header>
+
+    <!-- Headline -->
+    <h1 class="ig-post-title">{{ post.title }}</h1>
 
     <!-- Hero Image -->
     {% if post.featured_image %}
-        <div class="hero-wrapper mb-4">
+        <div class="ig-post-media">
             <img src="{{ post.featured_image.url }}"
                  alt="{{ post.title }}"
-                 class="hero-image rounded"
                  loading="lazy">
         </div>
     {% endif %}
 
-    <!-- Content -->
-    <article class="post-body mb-5">
+    <!-- Like / Comment / Share / Bookmark + likes count -->
+    {% include "partials/post_engagement.html" %}
+
+    <!-- Caption -->
+    <p class="ig-caption">
+        <span class="ig-username">{{ post.author.get_full_name|default:post.author.username }}</span>
+        {{ post.excerpt }}
+    </p>
+
+    <!-- Full article -->
+    <article class="post-body">
         {{ post.content|safe }}
     </article>
 
-    <!-- Meta -->
-    <div class="post-meta mt-3 mb-4 d-flex align-items-center gap-3">
-        <span class="meta-item">
-            <i class="fa fa-eye"></i> {{ post.views }}
-        </span>
-        <span class="meta-item">
-            <i class="fa fa-heart text-danger"></i> {{ post.likes.count }}
-        </span>
-    </div>
+</div>
 
-    <!-- Interaction Buttons -->
-    <div class="interaction-bar d-flex gap-3 mb-5">
+<!-- Editorial tools — deliberately separate from the reader-facing card above -->
+{% if request.user == post.author or perms.blog.change_post or perms.blog.can_approve_post or perms.blog.can_publish_post or perms.blog.delete_post %}
+<div class="admin-toolbar d-flex align-items-center flex-wrap gap-2 mb-4">
 
-        <!-- HTMX Like Button -->
-        {% include "partials/like_button.html" %}
-
-        <!-- HTMX Bookmark button -->
-        {% include "partials/bookmark_button.html" %}
-
-    </div>
-
-
-    <div class="admin-action-bar d-flex gap-2 mb-4">
+    <span class="admin-toolbar-label">Editorial tools</span>
 
     {% if request.user == post.author or perms.blog.change_post %}
         <a href="{% url 'post_update' slug=post.slug %}" class="btn btn-primary btn-sm">
@@ -121,64 +105,108 @@
     {% endif %}
 
     {% if perms.blog.delete_post %}
-        <form action="{% url 'post_delete' slug=post.slug %}" method="POST" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-sm">
-                <i class="fa fa-trash"></i> Delete
-            </button>
-        </form>
+        <a href="{% url 'post_delete' slug=post.slug %}" class="btn btn-danger btn-sm">
+            <i class="fa fa-trash"></i> Delete
+        </a>
     {% endif %}
 
 </div>
+{% endif %}
 
+<!-- Comments -->
+<section class="ig-comments" id="ig-comments">
 
+    <h3 class="mb-3">Comments</h3>
 
-    <hr>
-
-    <!-- Comments -->
-    <section class="comments-section mt-4">
-
-        <h3 class="mb-3">Comments</h3>
-
-        {% for comment in comments %}
-            <div class="comment-card p-3 mb-3 rounded border">
-                <strong class="comment-author d-block mb-1">
-                    {{ comment.user.get_full_name|default:comment.user.username }}
-                </strong>
-
-                <p class="comment-text mb-0">
-                    {{ comment.content|linebreaks }}
-                </p>
+    {% for comment in comments %}
+        <div class="ig-comment">
+            {% if comment.user.avatar %}
+                <img src="{{ comment.user.avatar.url }}" alt="" class="ig-avatar-sm">
+            {% else %}
+                <span class="ig-avatar-sm ig-avatar-fallback" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
+            {% endif %}
+            <div class="ig-comment-body">
+                <span class="ig-username">{{ comment.user.get_full_name|default:comment.user.username }}</span>
+                <span class="ig-comment-text">{{ comment.content }}</span>
+                <div class="ig-comment-meta">{{ comment.created_at|timesince }} ago</div>
             </div>
-        {% empty %}
-            <p class="text-muted">No comments yet.</p>
-        {% endfor %}
+        </div>
+    {% empty %}
+        <p class="text-muted">No comments yet. Be the first to comment.</p>
+    {% endfor %}
 
-        <!-- Add Comment -->
-        {% if user.is_authenticated %}
-            <form method="POST" class="mt-4">
-                {% csrf_token %}
+    <!-- Add Comment -->
+    {% if user.is_authenticated %}
+        <form method="POST" class="ig-comment-form">
+            {% csrf_token %}
 
-                {% if form.errors %}
-                    <div class="alert alert-danger">
-                        {{ form.errors }}
-                    </div>
-                {% endif %}
+            {{ form.content }}
 
-                {{ form.as_p }}
+            <button type="submit" class="ig-post-comment-btn" id="igPostCommentBtn" disabled>Post</button>
+        </form>
 
-                <button class="btn btn-success">Post Comment</button>
-            </form>
-        {% else %}
-            <p class="mt-3">
-                <a href="{% url 'login' %}" class="text-primary">Login</a>
-                to leave a comment.
-            </p>
+        {% if form.non_field_errors or form.content.errors %}
+            <div class="text-danger small mt-2">
+                {{ form.non_field_errors }}
+                {{ form.content.errors|join:", " }}
+            </div>
         {% endif %}
+    {% else %}
+        <p class="mt-3">
+            <a href="{% url 'login' %}?next={{ post.get_absolute_url }}" class="text-primary">Login</a>
+            to leave a comment.
+        </p>
+    {% endif %}
 
-    </section>
+</section>
 
 </div>
 
-{% endblock %}
+<script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        // Enable the comment "Post" button only once there's actual text,
+        // matching Instagram's composer behaviour.
+        var input = document.getElementById('{{ form.content.id_for_label }}');
+        var postBtn = document.getElementById('igPostCommentBtn');
 
+        if (input && postBtn) {
+            var syncState = function () {
+                postBtn.disabled = input.value.trim().length === 0;
+            };
+            input.addEventListener('input', syncState);
+            syncState();
+        }
+
+        // Share: native share sheet where available, else copy the link.
+        // Delegated on document (rather than bound directly to the button)
+        // because the button lives inside the #ig-engagement fragment that
+        // HTMX replaces wholesale on every like/bookmark toggle — a direct
+        // listener would be lost the first time that happens.
+        document.addEventListener('click', function (event) {
+            var shareBtn = event.target.closest('#igShareBtn');
+            if (!shareBtn) return;
+
+            var url = shareBtn.dataset.shareUrl;
+            var title = shareBtn.dataset.shareTitle;
+
+            if (navigator.share) {
+                navigator.share({ title: title, url: url }).catch(function () {});
+                return;
+            }
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function () {
+                    var icon = shareBtn.querySelector('i');
+                    icon.classList.remove('bi-send');
+                    icon.classList.add('bi-check2');
+                    setTimeout(function () {
+                        icon.classList.remove('bi-check2');
+                        icon.classList.add('bi-send');
+                    }, 1500);
+                });
+            }
+        });
+    });
+</script>
+
+{% endblock %}

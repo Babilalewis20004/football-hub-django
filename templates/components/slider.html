@@ -1,11 +1,31 @@
-<div id="post-slider" class="mb-5">
+<div id="post-slider" class="mb-5" role="region" aria-roledescription="carousel" aria-label="Featured posts">
     {% for post in slider_posts %}
-        <div class="post-slide {% if forloop.first %}active{% endif %}">
+        <a href="{{ post.get_absolute_url }}" class="post-slide {% if forloop.first %}active{% endif %}">
             {% if post.featured_image %}
                 <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
             {% endif %}
             <h2>{{ post.title }}</h2>
             <p>{{ post.content|truncatewords:20 }}</p>
-        </div>
+        </a>
     {% endfor %}
+
+    {% if slider_posts|length > 1 %}
+        <button type="button" class="slider-control slider-control-prev" aria-label="Previous slide">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="slider-control slider-control-next" aria-label="Next slide">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+
+        <div class="slider-indicators" role="tablist" aria-label="Slide selector">
+            {% for post in slider_posts %}
+                <button type="button"
+                        class="slider-indicator {% if forloop.first %}active{% endif %}"
+                        role="tab"
+                        aria-label="Go to slide {{ forloop.counter }}"
+                        aria-current="{% if forloop.first %}true{% else %}false{% endif %}">
+                </button>
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>

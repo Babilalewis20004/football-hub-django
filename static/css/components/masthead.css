@@ -1,0 +1,99 @@
+/* ==========================================================
+   MASTHEAD — Branded strip above the navbar
+========================================================== */
+
+.masthead {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.masthead-logo {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    background: #e2001a;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: 0.5px;
+    line-height: 1.05;
+    padding: 10px 46px 10px 20px;
+    clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
+}
+
+.masthead-logo-line {
+    font-size: 1.1rem;
+}
+
+.masthead-logo:hover {
+    color: #fff;
+    filter: brightness(1.08);
+}
+
+/* RIGHT-SIDE UTILITY ACTIONS */
+.masthead-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 20px;
+}
+
+.masthead-search input[type="text"] {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.masthead-search input[type="text"]::placeholder {
+    color: #ccc;
+}
+
+.masthead-actions .btn {
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 6px 12px;
+    transition: 0.3s ease;
+}
+
+.masthead-actions .btn-outline-light:hover {
+    background: #66fcf1;
+    color: #000;
+    border-color: #66fcf1;
+}
+
+#darkModeBtn {
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 6px 12px;
+    transition: 0.3s ease;
+}
+
+#darkModeBtn:hover {
+    background: #66fcf1;
+    color: #000;
+}
+
+/* REGISTER BUTTON */
+.masthead-actions .btn-success {
+    background: linear-gradient(90deg, #0099ff, #9333ea);
+    border: none;
+    font-weight: 600;
+}
+
+.masthead-actions .btn-success:hover {
+    opacity: 0.85;
+}
+
+@media (max-width: 600px) {
+    .masthead-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

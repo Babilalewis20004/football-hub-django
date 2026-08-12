@@ -79,8 +79,8 @@ class CommentForm(forms.ModelForm):
         fields = ["content"]
         widgets = {
             "content": forms.Textarea(attrs={
-                "class": "form-control",
-                "rows": 3,
-                "placeholder": "Write your comment..."
+                "class": "form-control ig-comment-input",
+                "rows": 1,
+                "placeholder": "Add a comment..."
             })
         }

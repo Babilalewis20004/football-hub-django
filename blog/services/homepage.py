@@ -19,9 +19,6 @@ def get_homepage_context():
         {"title": "Yellow card watch: WC QFs", "url": "#"},
     ]
 
-    france_flag = {"url": "https://flagcdn.com/w40/fr.png"}
-    morocco_flag = {"url": "https://flagcdn.com/w40/ma.png"}
-
     categories = Category.objects.all()
 
     return {
@@ -31,8 +28,5 @@ def get_homepage_context():
         "slider_posts": popular_posts,
         "worldcup_posts": worldcup_posts,
         "bullet_links": bullet_links,
-        "france_flag": france_flag,
-        "morocco_flag": morocco_flag,
-        "match_time": "9:00 PM",
         "categories": categories,
     }

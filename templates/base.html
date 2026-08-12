@@ -43,10 +43,10 @@
     <link rel="stylesheet" href="{% static 'css/core/global.css' %}">
 
     <!-- COMPONENTS -->
+    <link rel="stylesheet" href="{% static 'css/components/masthead.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/hero.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/bullet-links.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/match-block.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/article-card.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/slider.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/sidebar.css' %}">
@@ -81,6 +81,17 @@
 </head>
 
 <body>
+    <!-- Applied synchronously, before anything below paints, so a saved
+         "light" preference doesn't flash dark first. -->
+    <script nonce="{{ request.csp_nonce }}">
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+        }
+    </script>
+
+     <!-- MASTHEAD -->
+    {% include "components/masthead.html" %}
+
      <!-- NAVBAR -->
     {% include "components/navbar.html" %}
     
@@ -91,7 +102,10 @@
          {% if messages %}
          <div class="mt-3">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             {% endfor %}
     </div>
     {% endif %}
@@ -130,12 +144,8 @@
                 }
             }
 
-            const savedTheme = localStorage.getItem('theme');
-
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-mode');
-            }
-
+            // Theme class itself is already applied by the inline script at
+            // the top of <body>; this just syncs the toggle button's label.
             updateButton();
 
             btn.addEventListener('click', function () {

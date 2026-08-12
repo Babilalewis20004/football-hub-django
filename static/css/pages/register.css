@@ -6,106 +6,103 @@
     padding: 40px 0;
 }
 
-/* GLASS CARD */
+/* CARD */
 .glass-card {
     width: 420px;
-    padding: 30px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 25px rgba(0, 255, 180, 0.4);
+    max-width: 100%;
+    padding: 34px 30px;
+    border-radius: 18px;
+
+    background: #15151c;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+
+    text-align: center;
 }
 
 /* TITLE */
 .neon-title {
     text-align: center;
-    color: #00ffc8;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-shadow: 0 0 10px #00ffc8;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+/* SUBTITLE */
+.register-subtitle {
+    color: #9a9aa5;
+    font-size: 0.95rem;
+    margin-bottom: 26px;
 }
 
 /* FORM LABELS */
 .glass-card label {
-    color: #e0e0e0;
+    display: block;
+    text-align: left;
+    color: #e5e5ea;
     font-weight: 600;
+    font-size: 0.9rem;
 }
 
 /* INPUT FIELDS */
 .glass-card input {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     color: #fff;
-    border-radius: 8px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
 }
 
 .glass-card input::placeholder {
-    color: #ccc;
+    color: #6f6f7a;
 }
 
-/* REGISTER BUTTON */
+.glass-card input:focus {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: #66fcf1;
+    box-shadow: 0 0 0 3px rgba(102, 252, 241, 0.15);
+    color: #fff;
+    outline: none;
+}
+
+/* REGISTER BUTTON — matches the login button so the two pages feel like one flow */
 .neon-btn {
     width: 100%;
     padding: 12px;
     border: none;
     border-radius: 10px;
-    background: #00ffc8;
-    color: #000;
-    font-weight: bold;
+    background: linear-gradient(90deg, #0099ff, #9333ea);
+    color: #fff;
+    font-weight: 700;
     cursor: pointer;
-    transition: 0.3s;
-    box-shadow: 0 0 10px #00ffc8;
+    transition: 0.3s ease;
 }
 
 .neon-btn:hover {
-    box-shadow: 0 0 20px #00ffc8;
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
-
-/* SOCIAL LOGIN SECTION */
-.social-login {
-    text-align: center;
-    margin-top: 20px;
-}
-
-.social-login p {
-    color: #ccc;
-    margin-bottom: 10px;
-}
-
-/* SOCIAL BUTTONS */
-.social-btn {
-    width: 100%;
-    margin: 6px 0;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    color: #fff;
-}
-
-.google { background: #db4437; }
-.facebook { background: #1877f2; }
-.twitter { background: #1da1f2; }
 
 /* SUCCESS MESSAGE */
 .success-glow {
-    background: rgba(0, 255, 150, 0.2);
-    border-left: 4px solid #00ff9d;
-    padding: 10px;
+    background: rgba(0, 255, 157, 0.1);
+    border-left: 4px solid #00e08a;
+    border-radius: 8px;
+    padding: 12px 14px;
     margin-bottom: 15px;
-    color: #00ffbf;
-    font-weight: bold;
-    text-shadow: 0 0 5px #00ffbf;
+    color: #7cffc4;
+    font-weight: 600;
+    text-align: left;
 }
 
 /* PASSWORD STRENGTH METER */
 .strength-meter {
     width: 100%;
     height: 8px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 5px;
     margin: 10px 0 20px;
 }

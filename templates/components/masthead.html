@@ -1,0 +1,62 @@
+{% load static %}
+<div class="masthead">
+    <a href="{% url 'home' %}" class="masthead-logo" aria-label="Football Hub — Home">
+        <span class="masthead-logo-line">FOOTBALL</span>
+        <span class="masthead-logo-line">HUB</span>
+    </a>
+
+    <div class="masthead-actions">
+
+        <form action="{% url 'search' %}" method="GET" class="masthead-search d-flex">
+            <input type="text" name="q"
+                   class="form-control form-control-sm me-2"
+                   placeholder="Search...">
+            <button class="btn btn-sm btn-outline-light" type="submit">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+
+        <button id="darkModeBtn" class="btn btn-sm btn-outline-light">
+            🌙 Dark
+        </button>
+
+        {% if user.is_authenticated %}
+
+            <!-- EDITOR DASHBOARD -->
+            {% if perms.blog.can_approve_post %}
+                <a href="{% url 'editor_dashboard' %}" class="btn btn-sm btn-warning">
+                    Editor Dashboard
+                </a>
+            {% endif %}
+
+            <!-- SUPPORT INBOX (Admin + Editor) -->
+            {% if user.role == 'admin' or user.role == 'editor' %}
+                <a href="{% url 'support_inbox' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-headset"></i> Support Inbox
+                    <span id="support-unread-badge"
+                          class="badge bg-danger ms-1 {% if not support_unread_count %}d-none{% endif %}">
+                        🔔 {{ support_unread_count }}
+                    </span>
+                </a>
+                <script src="{% static 'js/support_notifications.js' %}" defer></script>
+            {% endif %}
+
+            <!-- AUTHOR DASHBOARD and Contributor (hidden from editors) -->
+            {% if perms.blog.add_post and not perms.blog.can_approve_post %}
+                <a href="{% url 'author_dashboard' %}" class="btn btn-sm btn-outline-light">
+                    Author &amp; Contributor Dashboard
+                </a>
+            {% endif %}
+
+            <!-- NEW POST -->
+            {% if perms.blog.add_post %}
+                <a href="{% url 'post_create' %}" class="btn btn-sm btn-success">+ Create Post</a>
+            {% endif %}
+
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login</a>
+            <a href="{% url 'register' %}" class="btn btn-sm btn-success">Register</a>
+        {% endif %}
+
+    </div>
+</div>

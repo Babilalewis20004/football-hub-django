@@ -18,13 +18,15 @@
     justify-content: space-between;
 
     box-shadow: 0 10px 25px rgba(0,0,0,0.45);
-}
 
-.navbar-brand {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 1px;
+    /* .navbar already forms a stacking context (backdrop-filter), but with
+       no explicit z-index it defaults to "auto" — later-in-DOM content that
+       also forms its own stacking context (e.g. hero cards, which use
+       backdrop-filter too) would then paint over it, dropdown menu and all.
+       An explicit z-index here lets the whole navbar, including anything
+       absolutely-positioned inside it, win regardless of DOM order. */
+    position: relative;
+    z-index: 1030;
 }
 
 .navbar-nav {
@@ -53,101 +55,58 @@
     gap: 12px;
 }
 
-/* RIGHT MENU DRAWER (OFFCANVAS) */
-#rightMenu {
+/* ACCOUNT MENU (icon toggle + dropdown) */
+.account-menu-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    padding: 0;
+    transition: 0.3s ease;
+}
+
+.account-menu-toggle:hover,
+.account-menu-toggle:focus {
+    background: #66fcf1;
+    color: #000;
+}
+
+.account-menu {
     background: linear-gradient(
         160deg,
         rgba(15, 12, 41, 0.98),
         rgba(48, 43, 99, 0.98)
     );
     backdrop-filter: blur(12px);
-    border-left: 1px solid rgba(255, 255, 255, 0.15);
-    width: 280px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 180px;
 }
 
-#rightMenu .offcanvas-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-#rightMenu .offcanvas-body form {
-    width: 100%;
-}
-
-#rightMenu .offcanvas-body .btn {
-    width: 100%;
+.account-menu .dropdown-item {
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
     text-align: left;
 }
 
-/* SEARCH BAR */
-.navbar form input[type="text"] {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 6px;
-}
-
-.navbar form input[type="text"]::placeholder {
-    color: #ccc;
-}
-
-.navbar form button {
-    border-radius: 6px;
-    font-weight: 600;
-    padding: 6px 12px;
-}
-
-/* DARK MODE BUTTON */
-#darkModeBtn {
-    border-radius: 6px;
-    font-weight: 600;
-    padding: 6px 12px;
-    transition: 0.3s ease;
-}
-
-#darkModeBtn:hover {
-    background: #66fcf1;
-    color: #000;
-}
-
-/* LOGIN / REGISTER / DASHBOARD / SAVED / LOGOUT */
-.navbar .btn-sm {
-    border-radius: 6px;
-    font-weight: 600;
-    padding: 6px 12px;
-    transition: 0.3s ease;
-}
-
-/* OUTLINE BUTTONS */
-.navbar .btn-outline-light:hover {
-    background: #66fcf1;
-    color: #000;
-}
-
-/* SUCCESS BUTTON (REGISTER) */
-.navbar .btn-success {
-    background: linear-gradient(90deg, #0099ff, #9333ea);
-    border: none;
-    font-weight: 600;
-}
-
-.navbar .btn-success:hover {
-    opacity: 0.85;
-}
-
-/* SAVED BUTTON */
-.navbar .btn-warning {
-    font-weight: 700;
-}
-
-/* LOGOUT LINK */
-.navbar .btn-link.nav-link {
-    color: #fff;
-    font-weight: 600;
-}
-
-.navbar .btn-link.nav-link:hover {
+.account-menu .dropdown-item:hover,
+.account-menu .dropdown-item:focus {
+    background: rgba(102, 252, 241, 0.15);
     color: #66fcf1;
+}
+
+.account-menu .dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* LEFT NAVBAR — Horizontal Neon Glass Tabs */

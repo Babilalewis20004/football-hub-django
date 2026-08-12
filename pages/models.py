@@ -26,3 +26,14 @@ class Feedback(models.Model):
     def __str__(self):
         submitter = self.name or (self.user and self.user.get_username()) or "Anonymous"
         return f"{self.rating}★ feedback from {submitter}"
+
+
+class Subscriber(models.Model):
+    email = models.EmailField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.email
