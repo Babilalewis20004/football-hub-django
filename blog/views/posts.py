@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import permission_required, login_required
 from django.views.decorators.http import require_POST
 from django.http import HttpResponseForbidden
@@ -92,7 +93,7 @@ def post_create(request):
 
         logger.info(f"Post created: {post.title} by {request.user.username}")
 
-        return redirect("post_detail", slug=post.slug)
+        return redirect("author_dashboard")
 
     return render(
         request,
@@ -140,7 +141,13 @@ def post_update(request, slug):
         form.save_m2m()
         logger.info(f"Post updated: {updated_post.title} by {request.user.username}")
 
-        return redirect("post_detail", slug=updated_post.slug)
+        # Editors (blog.change_post — can edit any post) land back on the
+        # editorial queue they came from; authors editing their own post
+        # land back on their own dashboard.
+        if request.user.has_perm("blog.change_post"):
+            return redirect("editor_dashboard")
+
+        return redirect("author_dashboard")
 
     return render(
         request,
@@ -154,7 +161,8 @@ def post_update(request, slug):
 
 
 @require_POST
-@permission_required("blog.can_publish_post")
+@login_required
+@permission_required("blog.can_publish_post", raise_exception=True)
 def post_publish(request, slug):
     post = get_object_or_404(Post, slug=slug)
 
@@ -177,11 +185,12 @@ def post_publish(request, slug):
     )
 
     logger.info(f"Post published: {post.title} by {request.user.username}")
-    return redirect("post_detail", slug=post.slug)
+    return redirect("editor_dashboard")
 
 
 @require_POST
-@permission_required("blog.can_approve_post")
+@login_required
+@permission_required("blog.can_approve_post", raise_exception=True)
 def post_approve(request, slug):
     post = get_object_or_404(Post, slug=slug)
 
@@ -197,7 +206,7 @@ def post_approve(request, slug):
     )
 
     logger.info(f"Post approved: {post.title} by {request.user.username}")
-    return redirect("post_detail", slug=post.slug)
+    return redirect("editor_dashboard")
 
 
 @require_POST
@@ -279,6 +288,11 @@ def post_delete(request, slug):
     if request.method == "POST":
         logger.warning(f"Post deleted: {post.title} by {request.user.username}")
         post.delete()
+        messages.success(request, "Deleted successfully")
+
+        if request.user.has_perm("blog.change_post"):
+            return redirect("editor_dashboard")
+
         return redirect("dashboard")
 
     return render(

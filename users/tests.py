@@ -56,7 +56,7 @@ class LoginLockoutTests(TestCase):
 
     def test_successful_login(self):
         response = self._post_login(self.username, self.password, self.role)
-        self.assertRedirects(response, reverse("dashboard"))
+        self.assertRedirects(response, reverse("home"))
         self.assertTrue(
             LoginAttempt.objects.filter(username=self.username, successful=True).exists()
         )
@@ -113,7 +113,7 @@ class LoginLockoutTests(TestCase):
         LoginAttempt.objects.filter(username=self.username).update(timestamp=past)
 
         response = self._post_login(self.username, self.password, self.role)
-        self.assertRedirects(response, reverse("dashboard"))
+        self.assertRedirects(response, reverse("home"))
 
     def test_nonexistent_username_locks_out_identically(self):
         """
@@ -201,7 +201,7 @@ class LoginCaptchaTests(TestCase):
         self._fail_until_captcha_required()
 
         response = self._post_login(self.password, extra=_solved_captcha())
-        self.assertRedirects(response, reverse("dashboard"))
+        self.assertRedirects(response, reverse("home"))
         self.assertTrue(
             LoginAttempt.objects.filter(username=self.username, successful=True).exists()
         )

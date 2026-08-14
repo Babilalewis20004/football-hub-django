@@ -3,6 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.contrib.messages import get_messages
 from django.utils.text import slugify
 
 from blog.models import (
@@ -400,7 +401,7 @@ class CRUDTests(BaseTestCase):
             }
         )
 
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("author_dashboard"))
 
     def test_post_created(self):
 
@@ -723,4 +724,128 @@ class PostWorkflowTransitionTests(BaseTestCase):
         self.draft.refresh_from_db()
         self.assertEqual(self.draft.status, "in_review")
 
-        
+    def test_editor_can_approve_in_review_post(self):
+        self.draft.status = "in_review"
+        self.draft.save()
+
+        self.client.login(username="editor", password="Password123!")
+        response = self.client.post(
+            reverse("post_approve", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("editor_dashboard"))
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "approved")
+        self.assertTrue(self.draft.is_approved)
+        self.assertIsNotNone(self.draft.status_changed_at)
+
+    def test_author_cannot_approve_post(self):
+        self.draft.status = "in_review"
+        self.draft.save()
+
+        self.client.login(username="author", password="Password123!")
+        response = self.client.post(
+            reverse("post_approve", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 403)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "in_review")
+
+    def test_anonymous_cannot_approve_post(self):
+        # login_required runs before the permission check, so an
+        # unauthenticated request is bounced to the login page rather
+        # than a bare 403 - same as any other login-gated view.
+        self.draft.status = "in_review"
+        self.draft.save()
+
+        response = self.client.post(
+            reverse("post_approve", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "in_review")
+
+    def test_editor_can_publish_approved_post(self):
+        self.draft.status = "approved"
+        self.draft.is_approved = True
+        self.draft.save()
+
+        self.client.login(username="editor", password="Password123!")
+        response = self.client.post(
+            reverse("post_publish", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("editor_dashboard"))
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "published")
+        self.assertTrue(self.draft.is_published)
+        self.assertTrue(self.draft.is_approved)
+        self.assertIsNotNone(self.draft.published_at)
+
+    def test_author_cannot_publish_post(self):
+        self.draft.status = "approved"
+        self.draft.is_approved = True
+        self.draft.save()
+
+        self.client.login(username="author", password="Password123!")
+        response = self.client.post(
+            reverse("post_publish", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 403)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "approved")
+        self.assertFalse(self.draft.is_published)
+
+    def test_anonymous_cannot_publish_post(self):
+        # Same login_required-before-permission ordering as approve above.
+        self.draft.status = "approved"
+        self.draft.is_approved = True
+        self.draft.save()
+
+        response = self.client.post(
+            reverse("post_publish", kwargs={"slug": self.draft.slug})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+        self.draft.refresh_from_db()
+        self.assertEqual(self.draft.status, "approved")
+        self.assertFalse(self.draft.is_published)
+
+    def test_author_edit_redirects_to_author_dashboard(self):
+        self.client.login(username="author", password="Password123!")
+        response = self.client.post(
+            reverse("post_update", kwargs={"slug": self.draft.slug}),
+            {
+                "title": self.draft.title,
+                "category": self.category.id,
+                "content": "Updated draft content.",
+            },
+        )
+        self.assertRedirects(response, reverse("author_dashboard"))
+
+    def test_editor_edit_redirects_to_editor_dashboard(self):
+        self.client.login(username="editor", password="Password123!")
+        response = self.client.post(
+            reverse("post_update", kwargs={"slug": self.draft.slug}),
+            {
+                "title": self.draft.title,
+                "category": self.category.id,
+                "content": "Editor-updated content.",
+            },
+        )
+        self.assertRedirects(response, reverse("editor_dashboard"))
+
+    def test_editor_delete_redirects_to_editor_dashboard(self):
+        # Editors already carry delete_post via the Editor group (setup_roles).
+        self.client.login(username="editor", password="Password123!")
+        response = self.client.post(
+            reverse("post_delete", kwargs={"slug": self.draft.slug})
+        )
+        self.assertRedirects(response, reverse("editor_dashboard"))
+        self.assertFalse(Post.objects.filter(slug=self.draft.slug).exists())
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), "Deleted successfully")
+

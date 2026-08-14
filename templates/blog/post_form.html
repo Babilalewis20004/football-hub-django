@@ -6,6 +6,8 @@
 
 {% block content %}
 
+{{ form.media }}
+
 {% url 'dashboard' as dashboard_url %}
 {% include "components/back_button.html" with fallback_url=dashboard_url %}
 

@@ -74,45 +74,6 @@
 
 </div>
 
-<!-- Editorial tools — deliberately separate from the reader-facing card above -->
-{% if request.user == post.author or perms.blog.change_post or perms.blog.can_approve_post or perms.blog.can_publish_post or perms.blog.delete_post %}
-<div class="admin-toolbar d-flex align-items-center flex-wrap gap-2 mb-4">
-
-    <span class="admin-toolbar-label">Editorial tools</span>
-
-    {% if request.user == post.author or perms.blog.change_post %}
-        <a href="{% url 'post_update' slug=post.slug %}" class="btn btn-primary btn-sm">
-            <i class="fa fa-edit"></i> Edit
-        </a>
-    {% endif %}
-
-    {% if perms.blog.can_approve_post %}
-        <form action="{% url 'post_approve' slug=post.slug %}" method="POST" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-warning btn-sm">
-                <i class="fa fa-check"></i> Approve
-            </button>
-        </form>
-    {% endif %}
-
-    {% if perms.blog.can_publish_post %}
-        <form action="{% url 'post_publish' slug=post.slug %}" method="POST" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success btn-sm">
-                <i class="fa fa-upload"></i> Publish
-            </button>
-        </form>
-    {% endif %}
-
-    {% if perms.blog.delete_post %}
-        <a href="{% url 'post_delete' slug=post.slug %}" class="btn btn-danger btn-sm">
-            <i class="fa fa-trash"></i> Delete
-        </a>
-    {% endif %}
-
-</div>
-{% endif %}
-
 <!-- Comments -->
 <section class="ig-comments" id="ig-comments">
 

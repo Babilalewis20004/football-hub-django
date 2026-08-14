@@ -1,17 +1,24 @@
 /* ==========================================================
    GLOBAL
+   linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+   #ffffff;
 ========================================================== */
 
 body{
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    background: linear-gradient(
+        135deg,
+        rgba(102, 252, 241, 0.18),
+        rgba(0, 153, 255, 0.18),
+        rgba(147, 51, 234, 0.18)
+    );
     color:#ffffff;
     font-family:Arial, Helvetica, sans-serif;
     transition:background .4s ease, color .3s ease;
 }
 
 body.light-mode #swap-container {
-    background-color: #ffffff;
-    color:#000000;
+    background-color: #000000;
+    color:#ffffff;
     padding: 20px;
     border-radius: 10px;
 }

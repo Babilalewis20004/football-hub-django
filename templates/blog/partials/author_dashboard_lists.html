@@ -41,7 +41,7 @@
             <a href="{% url 'post_update' slug=post.slug %}" class="ad-action">Continue editing</a>
             <form action="{% url 'post_submit_for_review' slug=post.slug %}" method="POST" class="ad-inline-form">
                 {% csrf_token %}
-                <button type="submit" class="ad-action ad-action--ghost">Submit for review</button>
+                <button type="submit" class="ad-action ad-action--primary">Submit for review</button>
             </form>
             <a href="{% url 'post_delete' slug=post.slug %}" class="ad-action ad-action--link ad-action--danger">Delete</a>
         </div>

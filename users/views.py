@@ -189,7 +189,7 @@ def login_view(request):
         ):
             return redirect(next_url)
 
-        return redirect("dashboard")
+        return redirect("home")
 
     return render(request, "users/login.html", {"next": next_url})
 
