@@ -1,0 +1,107 @@
+/* TWO-FACTOR AUTH PAGES (setup / verify / recovery codes) */
+
+.tfa-box {
+    max-width: 480px;
+}
+
+.tfa-required-badge {
+    display: inline-block;
+    background: rgba(226, 0, 26, 0.15);
+    color: #ff5c72;
+    border: 1px solid rgba(226, 0, 26, 0.35);
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 18px;
+}
+
+.tfa-step-label {
+    text-align: left;
+    color: #66fcf1;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 22px 0 8px;
+}
+
+.tfa-qr-wrapper {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    display: inline-block;
+    margin: 4px auto 14px;
+}
+
+.tfa-qr-wrapper img {
+    display: block;
+    width: 200px;
+    height: 200px;
+}
+
+.tfa-manual-key {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    word-break: break-all;
+    text-align: center;
+}
+
+.tfa-recovery-codes {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0;
+    margin: 18px 0;
+}
+
+.tfa-recovery-codes li {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 10px;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+}
+
+.tfa-warning-panel {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    color: #ffc107;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    text-align: left;
+    margin-bottom: 18px;
+}
+
+/* PROFILE SECURITY SECTION */
+.security-status-badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.security-status-badge.enabled {
+    background: rgba(25, 135, 84, 0.15);
+    color: #2fd674;
+    border: 1px solid rgba(25, 135, 84, 0.35);
+}
+
+.security-status-badge.disabled {
+    background: rgba(255, 255, 255, 0.06);
+    color: #9a9aa5;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}

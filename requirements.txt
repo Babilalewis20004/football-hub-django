@@ -7,6 +7,8 @@ crispy-bootstrap5==2025.4
 django-taggit==6.1.0
 django-ckeditor==6.7.2
 django-simple-captcha==0.7.0
+django-otp==1.7.0
+qrcode==8.2
 nh3==0.3.6
 gunicorn==23.0.0
 whitenoise==6.9.0

@@ -45,6 +45,10 @@ INSTALLED_APPS = [
     'ckeditor',
     'captcha',
 
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_otp.plugins.otp_static',
+
     'blog',
     'users',
     'chat',
@@ -60,8 +64,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'users.middleware.SessionInactivityTimeoutMiddleware',
+    'users.middleware.TwoFactorEnforcementMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -290,6 +296,16 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+# Two-factor authentication (django-otp). Privileged roles (see
+# users.twofactor.TWO_FACTOR_REQUIRED_ROLES) are forced through TOTP
+# enrollment on first login; see users.middleware.TwoFactorEnforcementMiddleware.
+OTP_TOTP_ISSUER = "Football Hub"
+
+# Hides the raw TOTP secret key and recovery-code values in the Django admin
+# (django_otp's own admin for TOTPDevice/StaticDevice) - superusers can still
+# see *whether* a device exists and reset enrollment, just not the secrets.
+OTP_ADMIN_HIDE_SENSITIVE_DATA = True
+
 # Login attempt lockout (see users.security)
 LOGIN_MAX_FAILED_ATTEMPTS = config("LOGIN_MAX_FAILED_ATTEMPTS", default=5, cast=int)
 LOGIN_LOCKOUT_MINUTES = config("LOGIN_LOCKOUT_MINUTES", default=15, cast=int)
@@ -370,7 +386,10 @@ CONTENT_SECURITY_POLICY_REPORT_ONLY = {
         # as its CSS.
         "font-src": [SELF, "https://cdn.jsdelivr.net"],
 
-        "img-src": [SELF],
+        # 'data:' covers the inline QR code image rendered on the 2FA setup
+        # page (generated server-side per request, not fetched from
+        # anywhere) - see users/views.py:two_factor_setup.
+        "img-src": [SELF, "data:"],
 
         # Same-origin fetch() calls and the chat app's ws:// / wss://
         # WebSocket connections (Django Channels) — 'self' covers both

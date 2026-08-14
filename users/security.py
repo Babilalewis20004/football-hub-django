@@ -18,6 +18,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import LoginAttempt
 
@@ -101,6 +102,22 @@ def requires_captcha(username):
     before being locked out entirely.
     """
     return failed_streak(username) >= CAPTCHA_AFTER_ATTEMPTS
+
+
+def safe_next_url(request, candidate):
+    """
+    `candidate` if it's a safe, same-site relative URL to redirect to after
+    login (or after the 2FA step that follows it), otherwise None. Never
+    redirect straight to a user-supplied URL unchecked - that's an
+    open-redirect vector (e.g. ?next=https://evil.example.com).
+    """
+    if candidate and url_has_allowed_host_and_scheme(
+        url=candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return None
 
 
 def minutes_remaining(unlock_at):

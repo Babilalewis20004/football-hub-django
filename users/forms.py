@@ -48,6 +48,27 @@ class LoginCaptchaForm(forms.Form):
     captcha = CaptchaField()
 
 
+class TwoFactorCodeForm(forms.Form):
+    """
+    A single code field used both when confirming a brand-new TOTP device
+    (setup) and when verifying an already-enrolled one (login). Accepts
+    either a 6-digit authenticator code or an 8-character recovery code -
+    the view tries both against the user's devices, so this form doesn't
+    need to know which kind was entered.
+    """
+
+    code = forms.CharField(
+        label="Authentication code",
+        max_length=16,
+        widget=forms.TextInput(attrs={
+            "autocomplete": "one-time-code",
+            "inputmode": "numeric",
+            "autofocus": True,
+            "class": "form-control login-input",
+        }),
+    )
+
+
 class ProfileUpdateForm(forms.ModelForm):
 
     class Meta:

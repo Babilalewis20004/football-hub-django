@@ -16,7 +16,7 @@
 | `script-src` | `'self' 'nonce-<random>' https://cdn.jsdelivr.net https://unpkg.com` | `'self'` for local static JS (htmx CSRF wiring aside — see below); jsdelivr for Bootstrap's bundle, unpkg for htmx; the nonce covers the two static inline `<script>` blocks in `base.html` and the conditional one in `profile.html`. |
 | `style-src` | `'self' 'unsafe-inline' https://cdn.jsdelivr.net` | jsdelivr for Bootstrap/Bootstrap Icons CSS. `'unsafe-inline'` is here **only because of CKEditor 4** — see below, it can't be avoided by nonces. |
 | `font-src` | `'self' https://cdn.jsdelivr.net` | Bootstrap Icons' `.woff2` files are served from the same jsdelivr host as its CSS. |
-| `img-src` | `'self'` | Posts/avatars are same-origin. **Inaccurate as originally written** — the homepage's country flags are actually loaded from `https://flagcdn.com`, not same-origin; see "Known gap" below. |
+| `img-src` | `'self' data:` | Posts/avatars are same-origin. `data:` was added for the 2FA setup page's QR code, which is generated server-side per request (`users/views.py:_qr_data_uri`) and embedded inline rather than served from its own URL — this may also explain the previously-unidentified inline `data:` SVG violations noted below. **Still inaccurate** — the homepage's country flags are actually loaded from `https://flagcdn.com`, not same-origin; see "Known gap" below. |
 | `connect-src` | `'self'` | Covers both the chat app's same-origin `fetch()` calls and its `ws://`/`wss://` WebSocket connections (Django Channels) — `'self'` matches ws/wss on the current host. |
 | `frame-src` | `'none'` | No iframes are embedded anywhere in the app. |
 | `frame-ancestors` | `'none'` | Mirrors the existing `X_FRAME_OPTIONS = 'DENY'`; nothing should be allowed to frame this site. |

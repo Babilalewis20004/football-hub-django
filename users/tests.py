@@ -232,7 +232,13 @@ class AdminLoginLockoutTests(TestCase):
 
     def test_successful_admin_login(self):
         response = self._post_admin_login(self.username, self.password)
-        self.assertRedirects(response, "/admin/")
+        # fetch_redirect_response=False: only the login redirect itself is
+        # under test here. The admin-role test user has no confirmed TOTP
+        # device, so actually following the redirect would hit the
+        # mandatory-2FA-enrollment gate (TwoFactorEnforcementMiddleware)
+        # and land on the setup page instead of a 200 from /admin/ -
+        # that's covered separately in TwoFactorEnrollmentTests.
+        self.assertRedirects(response, "/admin/", fetch_redirect_response=False)
         self.assertTrue(
             LoginAttempt.objects.filter(username=self.username, successful=True).exists()
         )
@@ -277,7 +283,13 @@ class AdminLoginLockoutTests(TestCase):
         LoginAttempt.objects.filter(username=self.username).update(timestamp=past)
 
         response = self._post_admin_login(self.username, self.password)
-        self.assertRedirects(response, "/admin/")
+        # fetch_redirect_response=False: only the login redirect itself is
+        # under test here. The admin-role test user has no confirmed TOTP
+        # device, so actually following the redirect would hit the
+        # mandatory-2FA-enrollment gate (TwoFactorEnforcementMiddleware)
+        # and land on the setup page instead of a 200 from /admin/ -
+        # that's covered separately in TwoFactorEnrollmentTests.
+        self.assertRedirects(response, "/admin/", fetch_redirect_response=False)
 
     def test_lockout_is_shared_between_public_login_and_admin_login(self):
         """
@@ -360,7 +372,13 @@ class AdminLoginCaptchaTests(TestCase):
         self._fail_until_captcha_required()
 
         response = self._post_admin_login(self.password, extra=_solved_captcha())
-        self.assertRedirects(response, "/admin/")
+        # fetch_redirect_response=False: only the login redirect itself is
+        # under test here. The admin-role test user has no confirmed TOTP
+        # device, so actually following the redirect would hit the
+        # mandatory-2FA-enrollment gate (TwoFactorEnforcementMiddleware)
+        # and land on the setup page instead of a 200 from /admin/ -
+        # that's covered separately in TwoFactorEnrollmentTests.
+        self.assertRedirects(response, "/admin/", fetch_redirect_response=False)
         self.assertTrue(
             LoginAttempt.objects.filter(username=self.username, successful=True).exists()
         )

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Your Recovery Codes | Football Hub{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+
+<div class="login-wrapper d-flex justify-content-center align-items-center">
+    <div class="login-box tfa-box">
+
+        <div class="auth-badge">
+            <i class="bi bi-key-fill"></i>
+        </div>
+
+        <h2 class="login-title">
+            {% if just_enrolled %}Two-Factor Authentication Enabled{% else %}New Recovery Codes{% endif %}
+        </h2>
+
+        <p class="login-subtitle">
+            Save these recovery codes somewhere safe, such as a password manager.
+            Each code can be used once to sign in if you lose access to your
+            authenticator app. Any older codes no longer work.
+        </p>
+
+        <ul class="tfa-recovery-codes">
+            {% for code in recovery_codes %}
+            <li>{{ code }}</li>
+            {% endfor %}
+        </ul>
+
+        <div class="tfa-warning-panel">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            These codes are shown only once. They cannot be viewed again after
+            you leave this page — if you lose them, regenerate a new set from
+            your account security settings.
+        </div>
+
+        <div class="form-check text-start mb-3">
+            <input class="form-check-input" type="checkbox" id="tfaCodesSavedCheck">
+            <label class="form-check-label login-footer" for="tfaCodesSavedCheck">
+                I've saved these recovery codes
+            </label>
+        </div>
+
+        {% if just_enrolled %}
+        <a id="tfaContinueLink"
+           href="{{ next|default:'/' }}"
+           class="btn btn-login w-100 disabled"
+           aria-disabled="true">
+            <i class="bi bi-arrow-right-circle me-1"></i> Continue to Football Hub
+        </a>
+        {% else %}
+        <a id="tfaContinueLink"
+           href="{% url 'profile' %}"
+           class="btn btn-login w-100 disabled"
+           aria-disabled="true">
+            <i class="bi bi-arrow-right-circle me-1"></i> Back to Account Settings
+        </a>
+        {% endif %}
+
+    </div>
+</div>
+
+<script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        var check = document.getElementById('tfaCodesSavedCheck');
+        var link = document.getElementById('tfaContinueLink');
+
+        check.addEventListener('change', function () {
+            link.classList.toggle('disabled', !check.checked);
+            link.setAttribute('aria-disabled', String(!check.checked));
+        });
+    });
+</script>
+
+{% endblock %}

@@ -38,6 +38,109 @@ Update Profile
 
 <hr>
 
+<div class="border rounded p-3 mt-4">
+    <h4>Two-Factor Authentication</h4>
+
+    {% if two_factor_enabled %}
+    <p>
+        Status:
+        <span class="security-status-badge enabled">
+            <i class="bi bi-shield-check"></i> Enabled
+        </span>
+    </p>
+    <p class="text-body-secondary">
+        {{ recovery_codes_remaining }} unused recovery code{{ recovery_codes_remaining|pluralize }} remaining.
+    </p>
+
+    <button type="button" class="btn btn-outline-secondary"
+            data-bs-toggle="modal" data-bs-target="#regenerateCodesModal">
+        Regenerate recovery codes
+    </button>
+
+    {% if two_factor_required %}
+    <p class="text-body-secondary mt-3 mb-0">
+        <i class="bi bi-info-circle"></i>
+        Two-factor authentication is required for your role and can't be disabled.
+    </p>
+    {% else %}
+    <button type="button" class="btn btn-outline-danger ms-2"
+            data-bs-toggle="modal" data-bs-target="#disable2faModal">
+        Disable 2FA
+    </button>
+    {% endif %}
+
+    {% else %}
+    <p>
+        Status:
+        <span class="security-status-badge disabled">Not enabled</span>
+    </p>
+    <p class="text-body-secondary">
+        Add an extra layer of security to your account using an authenticator app.
+    </p>
+    <a href="{% url 'two_factor_setup' %}" class="btn btn-outline-primary">
+        Enable two-factor authentication
+    </a>
+    {% endif %}
+</div>
+
+<!-- REGENERATE RECOVERY CODES MODAL -->
+<div class="modal fade" id="regenerateCodesModal" tabindex="-1"
+     aria-labelledby="regenerateCodesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'two_factor_regenerate_codes' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="regenerateCodesModalLabel">Regenerate Recovery Codes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Your current recovery codes will stop working immediately.
+                       Enter your password to confirm.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Regenerate Codes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if two_factor_enabled and not two_factor_required %}
+<!-- DISABLE 2FA MODAL -->
+<div class="modal fade" id="disable2faModal" tabindex="-1"
+     aria-labelledby="disable2faModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'two_factor_disable' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="disable2faModalLabel">Disable Two-Factor Authentication</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This will remove two-factor authentication and your recovery
+                       codes from your account. Enter your password to confirm.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Disable 2FA</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="border border-danger rounded p-3 mt-4">
     <h4 class="text-danger">Danger Zone</h4>
     <p>
