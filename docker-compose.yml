@@ -1,0 +1,75 @@
+# Base service definitions, shared by both development and production.
+#
+# Plain `docker compose up` merges this file with docker-compose.override.yml
+# automatically -> local development.
+# Production explicitly combines this file with docker-compose.prod.yml
+# instead (see docs/docker.md) -> that combination does NOT pick up
+# docker-compose.override.yml.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - backend
+    # No host port published: only `web` needs to reach Postgres, and it
+    # does so over the internal `backend` network at hostname `postgres`.
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - backend
+    # No host port published, same reasoning as postgres above.
+
+  web:
+    build:
+      context: .
+    env_file:
+      - .env
+    environment:
+      # Container-network hostnames. These intentionally override
+      # whatever DB_HOST/DB_PORT/REDIS_URL are set to in .env, because
+      # inside Docker "localhost" would mean the web container itself,
+      # not the postgres/redis containers (see docs/docker.md).
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # No application health endpoint exists in this codebase, so this
+      # checks only that something is listening on the app port rather
+      # than inventing a Django view for it.
+      test: ["CMD", "python", "-c", "import os,socket; socket.create_connection(('127.0.0.1', int(os.environ.get('PORT', 8000))), timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  postgres_data:

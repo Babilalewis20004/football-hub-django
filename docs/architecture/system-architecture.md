@@ -71,7 +71,7 @@ Cross-cutting middleware (`config/settings.py: MIDDLEWARE`) enforces session ina
 ### Real-time layer
 - **Django Channels** (`channels==4.3.2`) — provides the ASGI routing and WebSocket consumer framework used exclusively by the `chat` app.
 - **ASGI entrypoint** (`config/asgi.py`) — a `ProtocolTypeRouter` that routes `http` to the standard Django ASGI application and `websocket` to `chat.routing.websocket_urlpatterns`, wrapped in `AllowedHostsOriginValidator` (origin checking) and `AuthMiddlewareStack` (session/auth available inside consumers).
-- **Daphne** — the ASGI server that serves both HTTP and WebSocket traffic in this configuration (it is listed first in `INSTALLED_APPS`, which is required for Channels to hook into `manage.py runserver` in development).
+- **Daphne** — the ASGI server that serves both HTTP and WebSocket traffic in this configuration (it is listed first in `INSTALLED_APPS`, which is required for Channels to hook into `manage.py runserver` in development). In the Docker production image, `docker/entrypoint.sh` runs it directly: `daphne -b 0.0.0.0 -p 8000 config.asgi:application`, after `migrate`/`collectstatic`. `gunicorn` remains in `requirements.txt` but is not invoked anywhere in the Docker setup — see [deployment-architecture.md](deployment-architecture.md).
 - **Channel layer** — configurable: if `REDIS_URL` is set, uses `channels_redis.core.RedisChannelLayer`; otherwise falls back to `channels.layers.InMemoryChannelLayer`. See [deployment-architecture.md](deployment-architecture.md) for why this matters in multi-process production deployments.
 
 ### Data layer
@@ -86,8 +86,8 @@ Cross-cutting middleware (`config/settings.py: MIDDLEWARE`) enforces session ina
 - No other external APIs (no payment gateway, no SMS, no third-party OAuth/SSO, no analytics SDK) exist in the codebase.
 
 ### Static/media layer
-- **WhiteNoise** (`whitenoise.middleware.WhiteNoiseMiddleware`) — serves collected static files (`STATIC_ROOT = staticfiles/`) directly from the Django/ASGI process, without a separate static file server like Nginx being required for correctness (though one may still sit in front for TLS termination — see [deployment-architecture.md](deployment-architecture.md)).
-- **Media files** — `MEDIA_ROOT = media/`, served by Django's dev server only when `DEBUG=True` (`config/urls.py`'s conditional `static()` pattern); in production, media must be served by the reverse proxy or another mechanism, since Django/WhiteNoise does not serve `MEDIA_URL` outside `DEBUG`. Not determinable from the codebase whether a CDN or object storage (e.g. S3) is used in production — no such storage backend is configured in `settings.py`; files are read/written to the local filesystem (`avatars/`, `posts/`) via Django's default `FileSystemStorage`.
+- **WhiteNoise** (`whitenoise.middleware.WhiteNoiseMiddleware`) — serves collected static files (`STATIC_ROOT = staticfiles/`) directly from the Django/ASGI process, without a separate static file server like Nginx being required for correctness (though one still sits in front in the Docker production setup, for media — see below).
+- **Media files** — `MEDIA_ROOT = media/`, served by Django's dev server only when `DEBUG=True` (`config/urls.py`'s conditional `static()` pattern). In the Docker production setup (`docker-compose.prod.yml`), this gap is closed at the infrastructure layer: Nginx serves `/media/...` directly from a shared `media_data` Docker volume, not by any code in this repo. This is a single-host volume, not object storage (no CDN/S3 backend is configured in `settings.py`, and none was added — files are still read/written via Django's default `FileSystemStorage`) — see [docker.md](../docker.md) and [deployment-architecture.md](deployment-architecture.md) for what that does and doesn't guarantee.
 
 ## Logging (cross-cutting, worth noting at the system level)
 

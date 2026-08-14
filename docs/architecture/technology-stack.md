@@ -79,17 +79,17 @@ No other external API integrations (no email service beyond Django's console/SMT
 
 | Technology | Version (pinned) | Role |
 |---|---|---|
-| Gunicorn | 23.0.0 | WSGI server dependency — present in `requirements.txt`, but no `Procfile` or start-command script exists in the repo documenting its invocation (confirmed absent; flagged in `SECURITY_AUDIT_2026-08-10.md` §8) |
-| Daphne | 4.2.3 | ASGI server — required to serve WebSocket traffic; also listed under Real-time above |
+| Gunicorn | 23.0.0 | WSGI server dependency — present in `requirements.txt`, retained (not removed) but **not invoked** in the Docker setup; the ASGI production command is `daphne`, run directly by `docker/entrypoint.sh`. See `docs/docker.md` and `deployment-architecture.md`. |
+| Daphne | 4.2.3 | ASGI server — required to serve WebSocket traffic; also listed under Real-time above. Production start command: `daphne -b 0.0.0.0 -p 8000 config.asgi:application` |
 | WhiteNoise | 6.9.0 | Serves static files directly from the Django/ASGI process (`whitenoise.middleware.WhiteNoiseMiddleware`) |
-| Docker | **Not used** — no `Dockerfile`, `docker-compose.yml`, or `.dockerignore` found anywhere in the repository | n/a |
+| Docker | **Used**, as of this Dockerization — `Dockerfile`, `docker-compose.yml`, `docker-compose.override.yml` (dev), `docker-compose.prod.yml`, `docker/entrypoint.sh`, `docker/nginx/default.conf`, `.dockerignore`. See `docs/docker.md`. | n/a |
 | CI/CD | **Not used** — no `.github/workflows/`, `.gitlab-ci.yml`, or other CI config found anywhere in the repository | n/a |
 
 ## Explicitly confirmed absent (do not assume these exist)
 
 - No Django REST Framework (removed as an unused dependency per `SECURITY_AUDIT_2026-08-10.md`).
 - No JavaScript framework (React/Vue/etc.) and no frontend build tooling (webpack/vite/npm `package.json`).
-- No Docker or container orchestration configuration.
 - No CI/CD pipeline configuration.
 - No SQLite usage (gitignored defensively, never referenced in settings).
 - No caching framework configured (`CACHES` setting is not overridden from Django's default local-memory backend, and nothing in the codebase reads/writes through Django's cache API).
+- No object storage (S3 or similar) for media — Docker production media persistence is a single-host volume, see `docs/docker.md`.

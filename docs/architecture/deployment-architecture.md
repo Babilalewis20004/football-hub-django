@@ -1,8 +1,127 @@
 # Deployment Architecture
 
-**Important scope note:** this project contains no Dockerfile, no `docker-compose.yml`, no CI/CD pipeline configuration (no `.github/workflows/`, no `.gitlab-ci.yml`), and no `Procfile` or deployment script. Everything below describes what the codebase's own configuration (`config/settings.py`, `config/asgi.py`, `config/wsgi.py`, `requirements.txt`, `.env.example`) implies about how it is *meant* to be deployed — not a documented, executed deployment pipeline. Where the codebase is silent, this is stated explicitly rather than invented.
+**Scope note:** as of this Dockerization, the project has a `Dockerfile`,
+`docker-compose.yml` (+ `docker-compose.override.yml` for dev,
+`docker-compose.prod.yml` for production), `docker/entrypoint.sh`, and
+`docker/nginx/default.conf` — see [Current Docker
+architecture](#current-docker-architecture) below and
+[docs/docker.md](../docker.md) for day-to-day commands. There is still no
+CI/CD pipeline configuration (no `.github/workflows/`, no `.gitlab-ci.yml`)
+— deployment is manual. The rest of this document (below the Docker
+section) is the original pre-Docker analysis of what the codebase's own
+configuration implies about deployment; it's kept because it's still
+accurate background for *why* the Docker setup is shaped the way it is,
+not because it's now the primary source of truth.
 
-## Implied production topology
+## Current Docker architecture
+
+```text
+                              Internet
+                                 |
+                                 v
+                    +-------------------------+
+                    |  Nginx (:80, published)  |
+                    |  docker/nginx/default.conf |
+                    +------------+-------------+
+                       |                    |
+              /media/* served          everything else
+              directly from                 |
+              media_data volume             v
+                       |          +-------------------+
+                       |          |  web (Daphne)     |
+                       |          |  config.asgi:      |
+                       |          |  application       |
+                       |          |  (internal only,   |
+                       |          |   no host port)    |
+                       |          +----+-----------+---+
+                       |               |           |
+                       v               v           v
+                 media_data       postgres:5432  redis:6379
+                 (volume)         (internal only) (internal only)
+                                       |
+                                 postgres_data
+                                 (volume)
+```
+
+Production (`docker-compose.yml` + `docker-compose.prod.yml`): four
+containers — `nginx`, `web`, `postgres`, `redis` — on one internal Docker
+network (`backend`). Development (`docker-compose.yml` +
+`docker-compose.override.yml`, the default for plain `docker compose up`):
+three containers, no `nginx` — `web` runs `manage.py runserver` directly
+on a published `:8000`, with the project directory bind-mounted for live
+editing, since a single-host dev loop doesn't need the media-serving proxy
+that production requires.
+
+**Why Nginx, specifically:** not for TLS termination (none is configured —
+see docs/docker.md's "Limitations" section) and not for static files
+(WhiteNoise already serves those correctly from inside the `web` process,
+untouched by Docker). It exists to close a real, pre-existing gap
+confirmed below: **nothing in this codebase serves `/media/...` when
+`DEBUG=False`.** Nginx serves media directly from the shared `media_data`
+volume and reverse-proxies everything else (including `/ws/...` WebSocket
+upgrades) to Daphne. Without it, avatar and post-image uploads would
+404 in any production run of this container image.
+
+**ASGI server, resolved:** `daphne -b 0.0.0.0 -p 8000 config.asgi:application`
+is the production startup command (`docker/entrypoint.sh`, after
+`migrate`/`collectstatic`). This was previously "not determinable from the
+codebase" (§ below); it's now pinned down by the Docker implementation,
+answering the open question about Gunicorn vs. Daphne: **Gunicorn is not
+invoked anywhere in this Docker setup.** It remains in `requirements.txt`
+(not removed — no evidence it's used elsewhere, so removing it wasn't
+warranted) but plays no runtime role in the Dockerized deployment; ASGI/
+WebSocket support requires either Daphne directly or Gunicorn wrapping a
+`uvicorn.workers.UvicornWorker`-style ASGI class, and neither `uvicorn`
+nor a Gunicorn worker-class config exists in this repo.
+
+**Redis, resolved:** included as a service in both dev and production
+Compose files, reached via `REDIS_URL=redis://redis:6379/0` (the Compose
+service name — set directly in `docker-compose.yml`, overriding whatever
+`.env` has, since `.env`'s value needs to stay valid for running the app
+natively too). This makes `CHANNEL_LAYERS` use
+`channels_redis.core.RedisChannelLayer` in every Docker Compose run,
+resolving the "hard requirement for any multi-process production
+deployment" flagged below — verified working end-to-end (WebSocket message
+sent from one connection, round-tripped through Redis, received back and
+persisted to Postgres) as part of this Dockerization's testing.
+
+**Media, resolved:** `MEDIA_ROOT`/`MEDIA_URL` are unchanged in
+`config/settings.py` (they were already Docker-compatible — relative to
+`BASE_DIR`, no code change needed). What changed is *what serves them* in
+production: Nginx, from the `media_data` named volume (`docker-compose.prod.yml`),
+mounted read-write into `web` and read-only into `nginx`. This is a
+single-host Docker volume, not object storage — see docs/docker.md's
+"Limitations" section for what that does and doesn't guarantee.
+
+**What's unchanged:** no application code, models, migrations, URLs,
+authentication/authorization logic, or security settings were modified to
+make this work — see docs/docker.md and the final Docker implementation
+report for the full list of what was (and deliberately wasn't) touched.
+
+### Future infrastructure recommendations (not implemented)
+
+These are explicitly **not** part of the current implementation — listed
+so they aren't mistaken for gaps in this Dockerization, and to distinguish
+"not needed for this scope" from "not done":
+
+- **TLS termination** — either a managed load balancer in front of the
+  Docker host, or extending `docker/nginx/default.conf` with real
+  certificates. See docs/docker.md's `SECURE_PROXY_SSL_HEADER` note before
+  doing this.
+- **Object storage for media** (S3-compatible) — would remove the
+  single-host limitation on uploads; explicitly out of scope per this
+  task's constraints, not attempted.
+- **CI/CD** — automated build/test/deploy on push; none exists.
+- **Multi-host orchestration** (Kubernetes, Swarm, ECS, etc.) — this setup
+  is single-host Docker Compose by design; out of scope.
+- **A real application health endpoint** — the current `web` healthcheck
+  is a bare TCP connect (see docs/docker.md), not an app-level readiness
+  check (e.g. verifying DB connectivity from inside the view). Adding one
+  would be an application code change, not a Docker config change, and
+  wasn't made here to avoid inventing an API the codebase doesn't already
+  have.
+
+## Implied production topology (pre-Docker analysis, kept for context)
 
 ```text
                          Internet

@@ -1,0 +1,22 @@
+# Development overrides — merged automatically by `docker compose up`
+# (no -f flags needed). Not used in production; docker-compose.prod.yml
+# is combined explicitly instead and this file is left out of that command.
+#
+# Characteristics: source mounted read/write for live editing, Django's
+# autoreloading dev server (which is also Channels/WebSocket-capable
+# because `daphne` sits in INSTALLED_APPS — see config/settings.py), no
+# collectstatic (DEBUG=True serves STATICFILES_DIRS directly), no Nginx
+# (the app port is published straight to the host).
+
+services:
+  web:
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DJANGO_COLLECTSTATIC: "0"
+    volumes:
+      # Whole project mounted read/write, matching how the app already
+      # behaves when run natively (outside Docker): uploads land in
+      # ./media, code edits are picked up by the autoreloader.
+      - .:/app
+    ports:
+      - "8000:8000"

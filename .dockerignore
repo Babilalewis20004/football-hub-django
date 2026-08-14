@@ -1,0 +1,46 @@
+# Version control
+.git
+.gitignore
+
+# Secrets — never baked into the image; injected at runtime via
+# docker-compose's env_file/environment instead.
+.env
+.env.*
+!.env.example
+
+# Local virtual environments
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+
+# Test/coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Runtime-generated content — regenerated inside the container
+# (collectstatic on start, uploads via volumes) rather than copied in
+# from the host, so local dev artifacts never leak into the image.
+staticfiles/
+media/
+logs/
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docs / non-runtime project files (not needed inside the image)
+docs/
+Content Security policy Docs/
+*.md
+
+# Claude Code project metadata
+.claude/

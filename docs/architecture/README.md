@@ -7,7 +7,7 @@ Football Hub is a Django monolith (server-rendered templates + HTMX partials) wi
 - [system-architecture.md](system-architecture.md) — the main high-level architecture document: presentation/application/real-time/data/external-services/static layers, with a component diagram.
 - [application-architecture.md](application-architecture.md) — internal Django structure: URL routing, views, forms, services, mixins, middleware, signals, permissions, per-app breakdown.
 - [security-architecture.md](security-architecture.md) — authentication, authorization (roles vs. Django Groups/Permissions), session security, application security controls, with a security flow diagram.
-- [deployment-architecture.md](deployment-architecture.md) — implied production topology, what's actually configured vs. what's absent (no Docker, no CI/CD), environment variables, dev-vs-prod differences.
+- [deployment-architecture.md](deployment-architecture.md) — the current Docker architecture (containers, volumes, networking), plus the original pre-Docker analysis of what's implied vs. absent (still no CI/CD), environment variables, dev-vs-prod differences. See also [docs/docker.md](../docker.md) for commands.
 - [data-flow.md](data-flow.md) — six data flow diagrams: authentication, blog publishing workflow, search, live chat, Telegram announcements, feedback/subscription.
 - [authentication-flow.md](authentication-flow.md) — the complete login → lockout/CAPTCHA → 2FA → session flow as a single Mermaid flowchart.
 - [realtime-chat-flow.md](realtime-chat-flow.md) — Django Channels architecture in detail, with sequence diagrams for message delivery and chat closure.
