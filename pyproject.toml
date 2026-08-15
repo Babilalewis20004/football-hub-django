@@ -1,0 +1,16 @@
+[tool.bandit]
+exclude_dirs = [
+    "venv",
+    ".venv",
+    "staticfiles",
+    "media",
+    "logs",
+    "*/migrations",
+]
+# B105/B106: string-literal "password" matches in test fixtures (e.g.
+# users/tests.py's "correct-horse-battery-staple" login fixture) are known
+# false positives, not real secrets. Low severity + medium confidence only,
+# and the CI severity gate (--severity-level medium) already excludes them;
+# skipped here too so local `bandit -c pyproject.toml -r .` runs match CI
+# without needing the CLI flag repeated by hand.
+skips = ["B105", "B106"]
