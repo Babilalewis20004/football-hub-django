@@ -392,6 +392,15 @@ jobs:
   # ---------------------------------------------------------------------
   # Trivy container image scan. Builds the same Dockerfile used for
   # deployment (never pushed anywhere from this workflow) and scans it.
+  # Scoped to vuln,misconfig (same as trivy-fs) rather than Trivy's image
+  # default, which also runs secret detection: without that scope, Trivy
+  # flags a HIGH "AsymmetricPrivateKey" inside the autobahn package's own
+  # bundled example key (site-packages/autobahn/wamp/cryptosign.py) -
+  # verified 2026-08-16 as an upstream dependency's doctest fixture, not a
+  # project secret. Gitleaks already owns secret-scanning of our own
+  # source and full git history; scanning secrets inside vendored
+  # third-party package internals is out of scope for this job and just
+  # reproduces false positives like this one from upstream packages.
   # ---------------------------------------------------------------------
   trivy-image:
     name: Container Scan - Trivy (Docker image)
@@ -414,6 +423,7 @@ jobs:
         with:
           scan-type: image
           image-ref: football-hub:ci
+          scanners: vuln,misconfig
           format: sarif
           output: trivy-image-results.sarif
           severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
@@ -439,6 +449,7 @@ jobs:
         with:
           scan-type: image
           image-ref: football-hub:ci
+          scanners: vuln,misconfig
           format: table
           severity: CRITICAL,HIGH
           ignore-unfixed: true

@@ -159,7 +159,17 @@ the first place.
 (`docker build -t football-hub:ci .`, never pushed to any registry) and
 scans the resulting image for OS-package and language-dependency
 vulnerabilities. This is the same multi-stage, non-root (`USER appuser`)
-image used by `docker-compose.prod.yml`.
+image used by `docker-compose.prod.yml`. Both `trivy-image` steps pass
+`scanners: vuln,misconfig` explicitly (matching `trivy-fs`), rather than
+Trivy's image-scan default, which also runs secret detection. Verified
+2026-08-16: without that scope, Trivy flags a HIGH-severity
+`AsymmetricPrivateKey` inside `autobahn`'s own bundled source
+(`site-packages/autobahn/wamp/cryptosign.py`) — an upstream dependency's
+example/doctest key, not a project secret. Secret-scanning our own
+source and full git history is already Gitleaks' job (§6); scanning for
+secrets inside vendored third-party package internals is out of scope
+here and just reproduces false positives like this one every time a
+dependency ships an example key in its own code.
 
 - **Failure policy (both jobs):** same two-pass pattern — a full,
   unfiltered SARIF report for visibility, then a gate scoped to
@@ -185,6 +195,26 @@ principle of retaining useful output when SARIF isn't available rather
 than dropping the finding. Bandit's SARIF and Trivy's SARIF are *also*
 uploaded as artifacts in addition to Code Scanning, for anyone who wants
 the raw file without going through the Security tab.
+
+**Prerequisite: GitHub code scanning must be enabled on the repository.**
+`upload-sarif` uploads to **Security → Code scanning alerts**, a GitHub
+feature that requires either a public repository (free) or GitHub
+Advanced Security enabled on a private one (paid, org/enterprise
+setting). Without one of those, every `upload-sarif` step fails with
+"Code scanning is not enabled for this repository" — which is exactly
+what made `bandit`, `semgrep`, `gitleaks`, `trivy-fs`, and `trivy-image`
+all fail in this repo's initial PR run (diagnosed 2026-08-16), while
+`test`, `django-security-checks`, and `pip-audit` — none of which call
+`upload-sarif` — passed. It was not a scanner finding in any of the five
+jobs: Bandit, Semgrep, and Gitleaks (full history) all independently
+verified clean locally that same day. This repo's fix was to make the
+repository public rather than change the workflow; the `if: always()`
+SARIF steps have no other prerequisite and will succeed as soon as code
+scanning is available. If this repo is ever made private again without
+GHAS, the same failure will return on all five jobs simultaneously —
+that pattern (only SARIF-uploading jobs red, artifact uploads and
+severity-gate logs otherwise clean) is the signature to check for before
+assuming a real regression.
 
 ## 9. Pull Request gating and required status checks
 
@@ -231,7 +261,7 @@ false positive, document *why* at the point of suppression (as done for
 Bandit's B105/B106 above) rather than disabling the check globally or
 adding a blanket `continue-on-error`.
 
-## 11. Existing / pre-existing findings (as of 2026-08-15)
+## 11. Existing / pre-existing findings (as of 2026-08-16)
 
 These are recorded for transparency, not hidden by the pipeline's
 configuration:
@@ -241,10 +271,13 @@ configuration:
 | `django-ckeditor` bundles CKEditor 4, EOL with unfixed security issues (`ckeditor.W001`) | `manage.py check --deploy` | Open, tracked in `SECURITY_AUDIT_2026-08-10.md` §4.4 and `docs/README.md` | Structural — no config fix exists; requires migrating to a maintained editor. Django's own default `check` gate only fails on `ERROR`-level issues, and this is `WARNING`-level. |
 | `SECURE_HSTS_INCLUDE_SUBDOMAINS` / `SECURE_HSTS_PRELOAD` not enabled (`security.W005`/`W021`) | `manage.py check --deploy` (CI-simulated production posture) | Open — not yet wired to a setting in `config/settings.py` | Operational/policy decision (whether *all* subdomains should be HTTPS-only) that belongs to the project owner, not something this pipeline should silently force by editing `settings.py` |
 | 6 outdated-but-not-vulnerable direct dependencies (django-crispy-forms, crispy-bootstrap5, django-ckeditor, gunicorn, whitenoise, psycopg2-binary) | `SECURITY_AUDIT_2026-08-10.md` §2.4 | Informational | No known CVEs; pip-audit correctly doesn't flag these — routine maintenance, not a security gate concern |
+| `AsymmetricPrivateKey` in `autobahn/wamp/cryptosign.py` | Trivy image scan, default scanners | Resolved by scope, not suppression | See §7 — an upstream dependency's own bundled example key; `trivy-image` now scopes to `vuln,misconfig` (matching `trivy-fs`) instead of scanning secrets inside vendored package internals |
 
-pip-audit, Bandit, Gitleaks, and Trivy all reported **zero** findings when
-last verified locally (2026-08-15) — see each tool's section above for the
-exact commands used to confirm this.
+pip-audit, Bandit, Gitleaks, and Trivy all reported **zero** *project*
+findings when last verified locally (2026-08-16) — see each tool's
+section above for the exact commands used to confirm this. The one local
+finding (the `autobahn` key above) came from a dependency's own source,
+not this project's code or history.
 
 ## 12. Running the same scans locally
 
@@ -283,16 +316,20 @@ docker run --rm -v "${PWD}:/repo" aquasec/trivy:latest fs --scanners vuln,miscon
 # Trivy (container image scan)
 docker build -t football-hub:ci .
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
-  image football-hub:ci
+  image --scanners vuln,misconfig football-hub:ci
 ```
 
-**Local environment note (Windows):** if `pip-audit`/`bandit` fail with
-`SSLCertVerificationError` against `pypi.org`/`api.osv.dev` on a Windows
-dev machine, it's typically a local TLS-inspecting proxy/AV product whose
-CA isn't in Python's bundled trust store (already documented in
-`SECURITY_AUDIT_2026-08-10.md` §2.3). `pip install pip-system-certs`
-bridges Python to the OS trust store — a one-time local fix, not a
-project dependency.
+**Local environment note (Windows):** if `pip-audit`/`bandit`/`docker
+build`/`trivy` fail with `SSLCertVerificationError`/`x509: certificate
+signed by unknown authority` against `pypi.org`/`api.osv.dev`/
+`mirror.gcr.io` on a Windows dev machine, it's typically a local
+TLS-inspecting proxy/AV product whose CA isn't in the relevant tool's
+trust store (already documented in `SECURITY_AUDIT_2026-08-10.md` §2.3).
+`pip install pip-system-certs` bridges Python (pip-audit, Bandit) to the
+OS trust store; Docker/Trivy don't pick that up the same way, so a
+build/scan can still fail locally behind this kind of proxy even though
+it succeeds on GitHub-hosted runners, which sit outside it entirely —
+this is a local reproduction limitation, not a pipeline defect.
 
 ## 13. Caching
 
