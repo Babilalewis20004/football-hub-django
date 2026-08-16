@@ -272,12 +272,13 @@ configuration:
 | `SECURE_HSTS_INCLUDE_SUBDOMAINS` / `SECURE_HSTS_PRELOAD` not enabled (`security.W005`/`W021`) | `manage.py check --deploy` (CI-simulated production posture) | Open — not yet wired to a setting in `config/settings.py` | Operational/policy decision (whether *all* subdomains should be HTTPS-only) that belongs to the project owner, not something this pipeline should silently force by editing `settings.py` |
 | 6 outdated-but-not-vulnerable direct dependencies (django-crispy-forms, crispy-bootstrap5, django-ckeditor, gunicorn, whitenoise, psycopg2-binary) | `SECURITY_AUDIT_2026-08-10.md` §2.4 | Informational | No known CVEs; pip-audit correctly doesn't flag these — routine maintenance, not a security gate concern |
 | `AsymmetricPrivateKey` in `autobahn/wamp/cryptosign.py` | Trivy image scan, default scanners | Resolved by scope, not suppression | See §7 — an upstream dependency's own bundled example key; `trivy-image` now scopes to `vuln,misconfig` (matching `trivy-fs`) instead of scanning secrets inside vendored package internals |
+| `CVE-2026-8643` — pip < 26.1.2 path traversal via malicious wheel entry-point name (installed: 25.0.1, fixed: 26.1.2) | Trivy image scan (Code scanning alert #227) | Open, tracked here | MEDIUM severity — correctly below this pipeline's CRITICAL/HIGH merge-gate threshold (§10), so it reports without blocking, as designed. It's also the base `python:3.12-slim` image's own bundled system pip (`/usr/local/lib/python3.12/site-packages/pip-25.0.1`), never the app's pip in `/opt/venv`, and never invoked at runtime — the entrypoint only runs the app itself, not `pip install` — so real exploitability is negligible even though the CVE is genuine. Revisit if a future Debian/`python:3.12-slim` refresh bundles a patched pip for free, or if this ever needs to move above MEDIUM. |
 
 pip-audit, Bandit, Gitleaks, and Trivy all reported **zero** *project*
 findings when last verified locally (2026-08-16) — see each tool's
-section above for the exact commands used to confirm this. The one local
-finding (the `autobahn` key above) came from a dependency's own source,
-not this project's code or history.
+section above for the exact commands used to confirm this. The
+`autobahn` key and pip CVE above both came from third-party/base-image
+code, not this project's own source or history.
 
 ## 12. Running the same scans locally
 
