@@ -1,0 +1,491 @@
+name: Security Pipeline
+
+# Runs on every feature-branch push, every PR targeting main, and every push
+# to main (including merged PRs) - see docs/security.md for the full
+# pipeline architecture and failure policy.
+"on":
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - main
+
+# Cancel superseded runs on the same branch/PR so pushes during an active
+# scan don't queue up redundant work.
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege default. Individual jobs elevate only the specific
+# permissions they need (security-events: write to upload SARIF, plus
+# actions: read - required by github/codeql-action/upload-sarif on
+# private repos to look up the workflow run) and only for that job.
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"  # matches Dockerfile's python:3.12-slim base image
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Existing test suite (pytest / pytest-django). Reused as-is per
+  # TESTING.md rather than inventing a parallel test architecture - this
+  # is the same `python -m pytest -v` documented there.
+  # ---------------------------------------------------------------------
+  test:
+    name: Test Suite (pytest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: football_hub_ci
+          POSTGRES_USER: football_hub_ci
+          POSTGRES_PASSWORD: football_hub_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U football_hub_ci -d football_hub_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
+    env:
+      # CI-only dummy values for an ephemeral, network-isolated service
+      # container - never real credentials. See docs/security.md.
+      SECRET_KEY: "ci-only-dummy-key-never-used-in-production-8mP3qR7vN2wL9xJ4hT6yB1cF5dQ0sA"
+      DEBUG: "False"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DB_NAME: football_hub_ci
+      DB_USER: football_hub_ci
+      DB_PASSWORD: football_hub_ci_password
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run pytest
+        run: python -m pytest -v
+
+  # ---------------------------------------------------------------------
+  # Django's own deployment/security system checks. Runs with a
+  # CI-simulated production security posture (HTTPS-only cookies, HSTS,
+  # DEBUG off) so the only warnings that can appear are ones that are
+  # real regardless of environment - not artifacts of running on plain
+  # HTTP CI infrastructure. No database connectivity is required for
+  # `check`/`check --deploy` (verified locally), so no Postgres service
+  # is started for this job.
+  # ---------------------------------------------------------------------
+  django-security-checks:
+    name: Django Deployment Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run manage.py check --deploy
+        env:
+          SECRET_KEY: "ci-only-dummy-key-never-used-in-production-8mP3qR7vN2wL9xJ4hT6yB1cF5dQ0sA"
+          DEBUG: "False"
+          ALLOWED_HOSTS: "example.com"
+          DB_NAME: ci
+          DB_USER: ci
+          DB_PASSWORD: ci
+          DB_HOST: 127.0.0.1
+          DB_PORT: "5432"
+          # Simulate an HTTPS-terminated production deployment so the gate
+          # reflects real configuration correctness, not "this runner
+          # doesn't have TLS" noise.
+          SECURE_SSL_REDIRECT: "True"
+          SESSION_COOKIE_SECURE: "True"
+          CSRF_COOKIE_SECURE: "True"
+          SECURE_HSTS_SECONDS: "31536000"
+        run: |
+          set +e
+          python manage.py check --deploy 2>&1 | tee django_check_output.txt
+          status="${PIPESTATUS[0]}"
+          {
+            echo "## Django \`manage.py check --deploy\` output"
+            echo
+            echo '```'
+            cat django_check_output.txt
+            echo '```'
+            echo
+            echo "Exit code: $status. Django's \`check\` command fails only on ERROR-level"
+            echo "issues by default; WARNING-level deployment-posture findings are"
+            echo "informational and tracked in docs/security.md / SECURITY_AUDIT_2026-08-10.md"
+            echo "so they don't turn this required check permanently red for issues that"
+            echo "aren't code regressions (e.g. the bundled CKEditor 4 EOL notice)."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+  # ---------------------------------------------------------------------
+  # SAST #1: Bandit. Two passes - the first never fails and produces a
+  # full-fidelity SARIF report for the Security tab; the second is the
+  # actual merge gate, filtered to medium+ severity/confidence so the
+  # known low-severity false positives (B105 "hardcoded password" hits on
+  # test-fixture strings like "correct-horse-battery-staple" in
+  # users/tests.py) can't block CI. See pyproject.toml's [tool.bandit]
+  # for the shared exclude/skip config used both here and locally.
+  # ---------------------------------------------------------------------
+  bandit:
+    name: SAST - Bandit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read  # required by github/codeql-action/upload-sarif on private repos to look up the workflow run
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: .github/workflows/security.yml
+
+      - name: Install Bandit
+        run: pip install bandit==1.9.4 bandit-sarif-formatter==1.1.1
+
+      - name: Bandit - full report (SARIF, all findings)
+        run: bandit -c pyproject.toml -r . -f sarif -o bandit-results.sarif --exit-zero
+
+      - name: Upload Bandit report artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bandit-report
+          path: bandit-results.sarif
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
+        with:
+          sarif_file: bandit-results.sarif
+          category: bandit
+
+      - name: Bandit - severity gate (fails on medium+ severity & confidence)
+        run: bandit -c pyproject.toml -r . --severity-level medium --confidence-level medium
+
+  # ---------------------------------------------------------------------
+  # SAST #2: Semgrep, using Python/Django-focused community rulesets plus
+  # a general security-audit and secrets ruleset for defense in depth.
+  # Same two-pass pattern as Bandit: full SARIF for visibility, ERROR
+  # severity as the actual gate.
+  # ---------------------------------------------------------------------
+  semgrep:
+    name: SAST - Semgrep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read  # required by github/codeql-action/upload-sarif on private repos to look up the workflow run
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: .github/workflows/security.yml
+
+      - name: Install Semgrep
+        run: pip install semgrep==1.173.0
+
+      - name: Semgrep - full report (SARIF, all findings)
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --config p/python \
+            --config p/django \
+            --config p/secrets \
+            --exclude venv --exclude .venv --exclude node_modules \
+            --exclude staticfiles --exclude media --exclude logs \
+            --exclude "*/migrations/*" \
+            --sarif --output=semgrep-results.sarif \
+            .
+
+      - name: Upload Semgrep report artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: semgrep-report
+          path: semgrep-results.sarif
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
+        with:
+          sarif_file: semgrep-results.sarif
+          category: semgrep
+
+      - name: Semgrep - severity gate (fails on ERROR-severity findings)
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --config p/python \
+            --config p/django \
+            --config p/secrets \
+            --exclude venv --exclude .venv --exclude node_modules \
+            --exclude staticfiles --exclude media --exclude logs \
+            --exclude "*/migrations/*" \
+            --severity=ERROR \
+            --error \
+            .
+
+  # ---------------------------------------------------------------------
+  # Dependency vulnerability scan. requirements-dev.txt starts with
+  # `-r requirements.txt`, so this covers both production and
+  # dev/test-only dependencies in one pass. pip-audit's default exit
+  # behaviour (fail if any known vulnerability is found) is used as-is -
+  # that's the appropriate gate for a dependency scanner, not a
+  # weakening; see SECURITY_AUDIT_2026-08-10.md for the prior remediation
+  # that brought this to 0 known vulnerabilities.
+  # ---------------------------------------------------------------------
+  pip-audit:
+    name: Dependency Scan - pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install pip-audit
+        run: pip install pip-audit==2.10.1
+
+      - name: Run pip-audit (JSON report)
+        run: pip-audit -r requirements-dev.txt -f json -o pip-audit-results.json
+
+      - name: Upload pip-audit report artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pip-audit-report
+          path: pip-audit-results.json
+          retention-days: 30
+
+      - name: pip-audit severity gate (fails on any known vulnerability)
+        run: pip-audit -r requirements-dev.txt
+
+  # ---------------------------------------------------------------------
+  # Secret scanning. Runs against full git history (fetch-depth: 0) so a
+  # secret committed and later removed is still caught, not just the
+  # current working tree. --redact ensures no secret *values* are ever
+  # written to logs or the report - only file/line/rule metadata.
+  # ---------------------------------------------------------------------
+  gitleaks:
+    name: Secret Scan - Gitleaks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read  # required by github/codeql-action/upload-sarif on private repos to look up the workflow run
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            detect --source /repo --report-format sarif --report-path /repo/gitleaks-results.sarif --redact -v
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
+        with:
+          sarif_file: gitleaks-results.sarif
+          category: gitleaks
+
+  # ---------------------------------------------------------------------
+  # Trivy filesystem scan: dependency vulnerabilities (second, independent
+  # feed from pip-audit - intentional defense-in-depth overlap) plus
+  # Dockerfile/compose misconfiguration checks. venv/staticfiles/media/etc.
+  # are never present in a fresh checkout (they're gitignored), so no
+  # extra skip-dirs config is needed to keep them out of scope.
+  # ---------------------------------------------------------------------
+  trivy-fs:
+    name: Filesystem Scan - Trivy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read  # required by github/codeql-action/upload-sarif on private repos to look up the workflow run
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Trivy - full report (SARIF, all findings)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig
+          format: sarif
+          output: trivy-fs-results.sarif
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          exit-code: "0"
+
+      - name: Upload Trivy fs report artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-fs-report
+          path: trivy-fs-results.sarif
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
+        with:
+          sarif_file: trivy-fs-results.sarif
+          category: trivy-fs
+
+      - name: Trivy - severity gate (fails on fixable CRITICAL/HIGH)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  # ---------------------------------------------------------------------
+  # Trivy container image scan. Builds the same Dockerfile used for
+  # deployment (never pushed anywhere from this workflow) and scans it.
+  # Scoped to vuln,misconfig (same as trivy-fs) rather than Trivy's image
+  # default, which also runs secret detection: without that scope, Trivy
+  # flags a HIGH "AsymmetricPrivateKey" inside the autobahn package's own
+  # bundled example key (site-packages/autobahn/wamp/cryptosign.py) -
+  # verified 2026-08-16 as an upstream dependency's doctest fixture, not a
+  # project secret. Gitleaks already owns secret-scanning of our own
+  # source and full git history; scanning secrets inside vendored
+  # third-party package internals is out of scope for this job and just
+  # reproduces false positives like this one from upstream packages.
+  # ---------------------------------------------------------------------
+  trivy-image:
+    name: Container Scan - Trivy (Docker image)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read  # required by github/codeql-action/upload-sarif on private repos to look up the workflow run
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build Docker image
+        env:
+          DOCKER_BUILDKIT: "1"
+        run: docker build -t football-hub:ci .
+
+      - name: Trivy - full report (SARIF, all findings)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: football-hub:ci
+          scanners: vuln,misconfig
+          format: sarif
+          output: trivy-image-results.sarif
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          exit-code: "0"
+
+      - name: Upload Trivy image report artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-image-report
+          path: trivy-image-results.sarif
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
+        with:
+          sarif_file: trivy-image-results.sarif
+          category: trivy-image
+
+      - name: Trivy - severity gate (fails on fixable CRITICAL/HIGH)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: football-hub:ci
+          scanners: vuln,misconfig
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  # ---------------------------------------------------------------------
+  # Single aggregate status for branch protection. Individual jobs above
+  # remain independently visible/required if preferred - see
+  # docs/security.md for the recommended branch-protection configuration.
+  # ---------------------------------------------------------------------
+  security-gate:
+    name: Security Pipeline Result
+    if: always()
+    needs:
+      - test
+      - django-security-checks
+      - bandit
+      - semgrep
+      - pip-audit
+      - gitleaks
+      - trivy-fs
+      - trivy-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate job results
+        run: |
+          echo "test: ${{ needs.test.result }}"
+          echo "django-security-checks: ${{ needs.django-security-checks.result }}"
+          echo "bandit: ${{ needs.bandit.result }}"
+          echo "semgrep: ${{ needs.semgrep.result }}"
+          echo "pip-audit: ${{ needs.pip-audit.result }}"
+          echo "gitleaks: ${{ needs.gitleaks.result }}"
+          echo "trivy-fs: ${{ needs.trivy-fs.result }}"
+          echo "trivy-image: ${{ needs.trivy-image.result }}"
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more security pipeline jobs failed."
+            exit 1
+          fi
+          echo "All security pipeline jobs passed."

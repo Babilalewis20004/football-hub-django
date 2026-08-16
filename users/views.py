@@ -433,41 +433,55 @@ def two_factor_verify(request):
         form = TwoFactorCodeForm(request.POST)
         if form.is_valid():
             code = form.cleaned_data["code"]
-            error = _totp_throttle_message(device)
+            recovery_device = StaticDevice.objects.filter(
+                user=user, name=RECOVERY_DEVICE_NAME
+            ).first()
 
-            if error is None:
-                if device.verify_token(code):
-                    otp_login(request, device)
-                    logger.info("2FA verified: %s", user.username)
-                    return redirect(next_url or "home")
+            # Checked independently rather than short-circuiting on the
+            # TOTP device's throttle: a throttled authenticator app must
+            # not block a *recovery* code attempt (or mask a genuinely
+            # wrong/already-used one behind an unrelated throttle
+            # message) - the two devices are separate fallback paths for
+            # the same login, not a single combined attempt counter.
+            totp_error = _totp_throttle_message(device)
+            totp_attempted = totp_error is None
 
-                recovery_device = StaticDevice.objects.filter(
-                    user=user, name=RECOVERY_DEVICE_NAME
-                ).first()
-                recovery_error = (
-                    _totp_throttle_message(recovery_device) if recovery_device else None
+            if totp_attempted and device.verify_token(code):
+                otp_login(request, device)
+                logger.info("2FA verified: %s", user.username)
+                return redirect(next_url or "home")
+
+            recovery_error = (
+                _totp_throttle_message(recovery_device) if recovery_device else None
+            )
+            recovery_attempted = recovery_device is not None and recovery_error is None
+
+            if recovery_attempted and recovery_device.verify_token(code):
+                otp_login(request, recovery_device)
+                remaining = recovery_codes_remaining(user)
+                security_logger.warning(
+                    "2FA verified with a recovery code for '%s' from IP %s (%d code(s) left)",
+                    user.username,
+                    get_client_ip(request),
+                    remaining,
                 )
+                messages.warning(
+                    request,
+                    f"You signed in with a recovery code. {remaining} recovery "
+                    "code(s) remain - regenerate them soon if you're running low.",
+                )
+                return redirect(next_url or "home")
 
-                if recovery_device and recovery_error is None and recovery_device.verify_token(code):
-                    otp_login(request, recovery_device)
-                    remaining = recovery_codes_remaining(user)
-                    security_logger.warning(
-                        "2FA verified with a recovery code for '%s' from IP %s (%d code(s) left)",
-                        user.username,
-                        get_client_ip(request),
-                        remaining,
-                    )
-                    messages.warning(
-                        request,
-                        f"You signed in with a recovery code. {remaining} recovery "
-                        "code(s) remain - regenerate them soon if you're running low.",
-                    )
-                    return redirect(next_url or "home")
-
-                error = recovery_error
-
-            if error is None:
+            if totp_attempted or recovery_attempted:
+                # At least one device was actually checked against this
+                # code and rejected it outright - a real invalid/used
+                # code, regardless of whether the *other* device happens
+                # to be throttled right now.
                 error = "Invalid code. Please try again."
+            else:
+                # Every device that could have checked this code is
+                # currently throttled - nothing was actually verified.
+                error = totp_error or recovery_error
 
             security_logger.warning(
                 "2FA verification failed for '%s' from IP %s",

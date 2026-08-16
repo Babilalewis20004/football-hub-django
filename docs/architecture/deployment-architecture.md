@@ -5,9 +5,13 @@
 `docker-compose.prod.yml` for production), `docker/entrypoint.sh`, and
 `docker/nginx/default.conf` — see [Current Docker
 architecture](#current-docker-architecture) below and
-[docs/docker.md](../docker.md) for day-to-day commands. There is still no
-CI/CD pipeline configuration (no `.github/workflows/`, no `.gitlab-ci.yml`)
-— deployment is manual. The rest of this document (below the Docker
+[docs/docker.md](../docker.md) for day-to-day commands. As of
+`.github/workflows/security.yml`, the project also has a CI/CD **security**
+pipeline (SAST, dependency/secret/container scanning, and the existing test
+suite) that runs on every push and PR — see
+[docs/security.md](../security.md) for the full architecture. There is
+still no *deployment* automation (no build/push/deploy job anywhere) —
+deployment remains manual. The rest of this document (below the Docker
 section) is the original pre-Docker analysis of what the codebase's own
 configuration implies about deployment; it's kept because it's still
 accurate background for *why* the Docker setup is shaped the way it is,
@@ -111,7 +115,9 @@ so they aren't mistaken for gaps in this Dockerization, and to distinguish
 - **Object storage for media** (S3-compatible) — would remove the
   single-host limitation on uploads; explicitly out of scope per this
   task's constraints, not attempted.
-- **CI/CD** — automated build/test/deploy on push; none exists.
+- **CD (deployment automation)** — `.github/workflows/security.yml` covers
+  CI security scanning (see [docs/security.md](../security.md)) but there is
+  still no automated build/push/deploy job; deployment remains manual.
 - **Multi-host orchestration** (Kubernetes, Swarm, ECS, etc.) — this setup
   is single-host Docker Compose by design; out of scope.
 - **A real application health endpoint** — the current `web` healthcheck
