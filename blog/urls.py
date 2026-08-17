@@ -19,6 +19,7 @@ from blog.views.posts import (
 
 from blog.views.search import search_posts
 from blog.views.interactions import like_post, bookmark_post
+from blog.views.comments import delete_comment
 from blog.views.taxonomy import (
     author_posts,
     category_posts,
@@ -53,6 +54,9 @@ urlpatterns = [
     # Interactions
     path('like/<slug:slug>/', like_post, name='like_post'),
     path('bookmark/<slug:slug>/', bookmark_post, name='bookmark_post'),
+
+    # Comments
+    path('comment/<int:pk>/delete/', delete_comment, name='delete_comment'),
 
     # Filters
     path('author/<str:username>/', author_posts, name='author_posts'),

@@ -30,8 +30,7 @@ auth views for password reset)
    +---- Service layer call (blog/services/*.py) for non-trivial business logic
    |
    +---- Permission check (@login_required, @permission_required,
-   |      mixins.AuthorRequiredMixin, or an inline `request.user.role`/
-   |      `has_perm` check)
+   |      or an inline `request.user.role`/`has_perm` check)
    |
    v
 Django ORM (model methods, querysets)
@@ -67,9 +66,8 @@ HTTP Response --> Browser
 |---|---|
 | Models | `blog/models/` split into `category.py`, `post.py`, `comment.py`, `bookmark.py`, `notification.py`, re-exported via `blog/models/__init__.py` |
 | Forms | `blog/forms.py` — `PostForm` (with server-side content sanitization), `CommentForm` |
-| Views | Split by concern under `blog/views/`: `home.py` (homepage), `posts.py` (CRUD + editorial workflow + dashboards), `interactions.py` (like/bookmark, HTMX partial responses), `search.py`, `taxonomy.py` (author/category/tag listing pages), `dashboard.py` (generic user dashboard + saved posts), `comments.py` (`delete_comment` — defined but **not wired to any URL**, dead code) |
+| Views | Split by concern under `blog/views/`: `home.py` (homepage), `posts.py` (CRUD + editorial workflow + dashboards), `interactions.py` (like/bookmark, HTMX partial responses), `search.py`, `taxonomy.py` (author/category/tag listing pages), `dashboard.py` (generic user dashboard + saved posts), `comments.py` (`delete_comment` — ownership-checked comment deletion, wired to `blog/urls.py`) |
 | Services | `blog/services/posts.py` (`can_view_post`, `get_related_posts`), `blog/services/homepage.py` (`get_homepage_context`), `blog/services/comments.py` (`create_comment`), `blog/services/telegram.py` (`send_new_post_announcement`), `blog/services/search.py` (`search_posts_queryset` — defined but **not called by any view**; `blog/views/search.py` duplicates the same query logic inline instead) |
-| Mixins | `blog/mixins.py` — `AuthorRequiredMixin` (role check via `dispatch`) — **not used by any current view**, since all views in this project are function-based, not class-based |
 | URLs | `blog/urls.py`, mounted at the site root (`''`) in `config/urls.py` |
 | Context processors | `blog/context_processors.py` — `sidebar_data` (categories/trending/latest — feeds the orphaned `blog/includes/sidebar.html`, which no template currently includes), `seo_defaults` (canonical URL, site name) |
 | Management commands | `blog/management/commands/setup_roles.py` — one-off command to create/refresh the `Admin`/`Editor`/`Author`/`Contributor`/`Reader` Django Groups and their permissions |
@@ -116,7 +114,6 @@ HTTP Response --> Browser
 | `@require_POST` / `@require_GET` | Many state-changing or JSON-only views across all four apps | Rejects the wrong HTTP method (405) |
 | Inline `request.user.role` / `request.user.has_perm(...)` checks | `blog/views/posts.py: post_update` (object-level "own post" check), `chat/permissions.py: is_support_agent` | Object-level authorization that Django's permission system doesn't express on its own |
 | `chat.permissions.support_agent_required` | `chat/views.py: support_inbox`, `support_chat_room` | Combines `@login_required` with a role check, raising `PermissionDenied` (403) otherwise |
-| `blog.mixins.AuthorRequiredMixin` | Defined, **unused** | Would apply to a class-based view via `dispatch()`, but no CBVs use it |
 
 ## Static assets
 
