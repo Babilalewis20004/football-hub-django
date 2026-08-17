@@ -89,7 +89,15 @@
             <div class="ig-comment-body">
                 <span class="ig-username">{{ comment.user.get_full_name|default:comment.user.username }}</span>
                 <span class="ig-comment-text">{{ comment.content }}</span>
-                <div class="ig-comment-meta">{{ comment.created_at|timesince }} ago</div>
+                <div class="ig-comment-meta">
+                    {{ comment.created_at|timesince }} ago
+                    {% if comment.user == user %}
+                        <form method="POST" action="{% url 'delete_comment' comment.pk %}" class="ig-comment-delete-form">
+                            {% csrf_token %}
+                            <button type="submit" class="ig-comment-delete-btn" aria-label="Delete comment">Delete</button>
+                        </form>
+                    {% endif %}
+                </div>
             </div>
         </div>
     {% empty %}
