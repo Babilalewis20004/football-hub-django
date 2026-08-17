@@ -11,10 +11,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# build-essential covers the (unlikely, but not guaranteed) case where a
-# pinned dependency has no prebuilt wheel for this platform/Python combo.
-# psycopg2-binary, Pillow, nh3 etc. normally install from wheels alone.
+# apt-get upgrade pulls in any Debian security patch released since this
+# base image tag was last rebuilt upstream (see the final stage below for
+# why that gap matters). build-essential covers the (unlikely, but not
+# guaranteed) case where a pinned dependency has no prebuilt wheel for
+# this platform/Python combo - psycopg2-binary, Pillow, nh3 etc. normally
+# install from wheels alone.
 RUN apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,6 +41,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=config.settings
+
+# This FROM starts a fresh copy of the base image - none of the builder
+# stage's package upgrades carry over across a multi-stage build boundary,
+# and this is the layer that actually ships and gets Trivy-scanned. Same
+# reasoning as the builder stage: patches an OS-level CVE fix that already
+# exists in Debian's repos but isn't baked into this image tag yet,
+# without waiting on an upstream python:3.12-slim rebuild. See
+# docs/security.md §7 for the Trivy fixable-CRITICAL/HIGH gate this keeps
+# green.
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN useradd --create-home --shell /bin/bash appuser
 
