@@ -9,13 +9,13 @@ This project runs its existing Django `TestCase` suite through `pytest` via `pyt
 - Run the suite: `python -m pytest -v`
 - Run with coverage: `python -m pytest --cov --cov-report=term-missing`
 
-As of the last run, both runners agree on **231 tests**, all passing.
+As of the last run, both runners agree on **256 tests** (plus 15 subtests), all passing.
 
 ## Current coverage status (whole project)
 
 Last measured with `python -m pytest --cov --cov-report=term-missing`:
 
-**Overall: 99% (3050 statements, 41 missed)**
+**Overall: 99% (3362 statements, 44 missed)**
 
 Every app/service/view module is at 100% except the handful below, all of which are minor edge cases rather than unexercised features:
 
@@ -26,7 +26,7 @@ Every app/service/view module is at 100% except the handful below, all of which 
 | `blog/models/notification.py` | 89% | One line |
 | `users/security.py` | 94% | A few lines |
 | `users/middleware.py` | 94% | Session-timeout edge case |
-| `users/models.py` | 90% | Two lines |
+| `users/models.py` | 92% | Two lines |
 | `users/views.py` | 99% | One line — see below |
 | `blog/views/home.py`, `blog/views/search.py`, `blog/forms.py`, `config/settings.py`, `config/urls.py`, `pages/models.py`, `pages/views.py`, `blog/migrations/0015...` | 87-98% | One line each |
 
@@ -67,7 +67,7 @@ Every app/service/view module is at 100% except the handful below, all of which 
 - [x] Improve coverage for `blog/views/dashboard.py`
 - [x] Improve coverage for `blog/services/telegram.py`
 - [x] Improve coverage for `users/views.py`
-- [x] Run the complete pytest suite (`python -m pytest -v`) — 231 passed
+- [x] Run the complete pytest suite (`python -m pytest -v`) — 256 passed
 - [x] Run coverage with `--cov --cov-report=term-missing`
 - [x] Review all remaining uncovered statements — all are minor edge cases or (one line) defensive code for a third-party invariant
 - [x] Confirm no important production code remains unintentionally untested

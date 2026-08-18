@@ -49,6 +49,6 @@
 - `users.twofactor.TWO_FACTOR_REQUIRED_ROLES = {"admin", "editor", "author"}` — which roles must complete TOTP enrollment.
 - `users.signals.SINGLE_SESSION_ROLES = {"admin", "editor", "author"}` — which roles get their other sessions evicted on a fresh login.
 - `chat.models.SUPPORT_ROLES = ('admin', 'editor')` — which roles can act as live-chat support agents (`chat.permissions.is_support_agent`).
-- `users.views.PUBLIC_LOGIN_ROLES = ("editor", "author", "reader")` — which roles are selectable on the public login form (`admin` must use `/admin/`).
+- `users.views.PUBLIC_LOGIN_ROLES = ("editor", "author", "contributor", "reader")` — which roles are selectable on the public login form (`admin` must use `/admin/`).
 
 These are **application-level policy sets**, independent of the separate Django `Group`/`Permission` system created by `blog/management/commands/setup_roles.py` (see [security-architecture.md](../architecture/security-architecture.md) for how the two systems relate).

@@ -12,7 +12,10 @@ HTMX) backed by PostgreSQL, with Redis powering real-time messaging.
 ## Features
 
 - **Editorial workflow** — role-based publishing pipeline (Admin / Editor
-  / Author / Reader) with draft, review, approval, and publish states.
+  / Author / Contributor / Reader) with draft, review, approval, and
+  publish states. Every new account starts as a Reader; an Admin promotes
+  users to Contributor/Editor from Django admin (see
+  [docs/architecture/security-architecture.md](docs/architecture/security-architecture.md#authorization)).
 - **Live chat & support inbox** — real-time messaging over WebSockets
   (Django Channels + Daphne), backed by Redis in multi-worker deployments.
 - **Account security** — TOTP two-factor authentication (`django-otp`),

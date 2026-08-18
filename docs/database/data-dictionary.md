@@ -12,7 +12,7 @@ Flat, field-by-field reference across all project-defined models. For type/const
 | `bio` | TextField | `None`/blank | Free-text profile bio |
 | `avatar` | ImageField | `avatars/default.jpg` | Profile picture, stored under `MEDIA_ROOT/avatars/` |
 | `favorite_team` | CharField | `""` | Free-text; not linked to any structured team/league data |
-| `role` | CharField | `reader` | One of `admin`, `editor`, `author`, `reader` — the single source of truth for role-based behavior throughout the app |
+| `role` | CharField | `reader` | One of `admin`, `editor`, `author`, `contributor`, `reader` — the application-level role, kept in sync with Django Group membership by `users.signals.sync_role_group` (see [security-architecture.md](../architecture/security-architecture.md)). Defaults to `reader` for every new account; a public user can never set it directly (`RegisterForm` has no `role` field). |
 
 ## `users.LoginAttempt`
 

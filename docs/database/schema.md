@@ -15,7 +15,7 @@ Extends `django.contrib.auth.models.AbstractUser` (`AUTH_USER_MODEL = 'users.Cus
 | `bio` | TextField | blank, null | |
 | `avatar` | ImageField | upload_to `avatars/`, default `avatars/default.jpg`, blank | |
 | `favorite_team` | CharField(100) | blank | Free-text, not a FK to any team model — no `Team` model exists in this project |
-| `role` | CharField(20) | choices: `admin`, `editor`, `author`, `reader`; default `reader` | Drives permission checks, 2FA requirement, single-session enforcement (see [relationships.md](relationships.md)) |
+| `role` | CharField(20) | choices: `admin`, `editor`, `author`, `contributor`, `reader`; default `reader` | Application-level role, kept in sync with Django Group membership by `users.signals.sync_role_group`. Drives permission checks, 2FA requirement, single-session enforcement (see [relationships.md](relationships.md)) |
 
 ### `LoginAttempt` (table: `users_loginattempt`)
 Migration `0003_loginattempt`.
@@ -171,7 +171,7 @@ No `Meta` class — default ordering (insertion order / PK order).
 | App | Migrations |
 |---|---|
 | `blog` | `0001_initial` → `0002_post_views_bookmark` → `0003_comment_parent` → `0004_post_seo_description_post_seo_title` → `0005_post_likes` → `0006_post_excerpt_alter_post_category_and_more` → `0007_alter_category_options_alter_bookmark_post_and_more` → `0008_alter_bookmark_unique_together_and_more` → `0009_post_bookmarks` → `0010_alter_post_options_and_more` → `0011_alter_post_options_post_blog_post_views_9a8dee_idx_and_more` → `0012_alter_post_options` → `0013_post_is_approved_post_status_alter_post_is_published` → `0014_notification` → `0015_post_editor_feedback_post_published_at_and_more` |
-| `users` | `0001_initial` → `0002_customuser_role` → `0003_loginattempt` → `0004_alter_customuser_avatar` |
+| `users` | `0001_initial` → `0002_customuser_role` → `0003_loginattempt` → `0004_alter_customuser_avatar` → `0005_alter_customuser_role` |
 | `chat` | `0001_initial` |
 | `pages` | `0001_initial` → `0002_subscriber` |
 

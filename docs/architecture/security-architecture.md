@@ -70,23 +70,45 @@ Standard Django `authenticate()`/`login()` (`django.contrib.auth`), backed by `C
 
 ## Authorization
 
-Two independent, coexisting authorization mechanisms:
+Two authorization mechanisms, now kept in sync by `users/signals.py: sync_role_group` (see below — this was previously a known gap; it has since been fixed):
 
 ### 1. `CustomUser.role` (application-level role field)
-A plain string field (`admin`/`editor`/`author`/`reader`) checked directly in code for: which login roles are selectable, which roles require 2FA, which roles get single-session enforcement, which roles can act as chat support agents, and object-level post-editing rules.
+A plain string field — one of `admin`/`editor`/`author`/`contributor`/`reader` (`CustomUser.ROLE_CHOICES`) — checked directly in code for: which login roles are selectable, which roles require 2FA, which roles get single-session enforcement, which roles can act as chat support agents, and object-level post-editing rules. `role` defaults to `"reader"` at the model level, so every newly registered account (`users/forms.py: RegisterForm`, which deliberately has no `role` field for a public user to submit) starts as a Reader.
 
 ### 2. Django Groups & Permissions (`blog/management/commands/setup_roles.py`)
-A separate, `manage.py setup_roles`-driven system that creates five Django `Group`s — **Admin, Editor, Author, Contributor, Reader** — and assigns `Permission` rows to each:
+A `manage.py setup_roles`-driven system that creates five Django `Group`s — **Admin, Editor, Author, Contributor, Reader** — and assigns `Permission` rows to each. This is the system Django's own permission checks (`request.user.has_perm(...)`, `@permission_required` in `blog/views/posts.py`) actually resolve against for a non-superuser:
 
 | Group | Permissions granted |
 |---|---|
 | Admin | All permissions on the `Post` content type (add/change/delete/view + `can_publish_post`/`can_feature_post`/`can_approve_post`) |
 | Editor | `add_post`, `change_post`, `delete_post`, `view_post`, `can_publish_post`, `can_feature_post`, `can_approve_post` |
 | Author | `add_post`, `view_post` only — **deliberately excludes `change_post`** (a code comment explains: that permission is checked globally, not per-object, so granting it would let any author edit every other author's posts; authors edit their own posts via an object-level ownership check in `post_update` instead, which needs no permission) |
-| Contributor | `add_post`, `view_post` (same as Author) — note: "Contributor" exists as a Django Group but is **not** one of `CustomUser.ROLE_CHOICES** (`admin`/`editor`/`author`/`reader` only) — see Issues below |
+| Contributor | `add_post`, `view_post` (same as Author) |
 | Reader | `view_post` only |
 
-**Note on the relationship between the two systems:** nothing in the codebase automatically assigns a `CustomUser` to its matching `Group` when `role` is set (no signal, no `save()` override does this). `@permission_required` checks in `blog/views/posts.py` rely on Django's permission system (`request.user.has_perm(...)`), which for a non-superuser normally resolves through Group membership. **This means a `CustomUser` with `role="author"` has no actual `add_post`/`view_post` permission unless something (not found in this codebase — likely manual admin action) has also added that user to the matching Group.** This is flagged as a discrepancy in the final report; it is not determinable from the code alone whether group assignment happens through an out-of-band process (e.g. manually in Django admin at account creation).
+### Keeping the two in sync: `users/signals.py: sync_role_group`
+A `post_save` signal on `CustomUser` that runs whenever `role` actually changes (new user, or an existing user's `role` was edited) and calls `apply_role_group()`: it adds the user to the one Group matching their new `role` and removes them from the other four application-role Groups, so a role change can never leave a user holding two roles' worth of Group permissions at once (e.g. still in "Editor" after being demoted to "Reader"). The mapping itself (`ROLE_GROUP_NAMES`) is derived directly from `CustomUser.ROLE_CHOICES` rather than duplicated, since the choice labels (Admin/Editor/Author/Contributor/Reader) already match the Group names exactly.
+
+`apply_role_group()` is also reused by `manage.py backfill_user_roles` (see below) to repair any account whose Group membership drifted from its `role` field before this signal existed, without duplicating the add/remove logic a second time.
+
+### Default Reader assignment and legacy accounts
+- **New registrations:** `role` defaults to `"reader"` at the model level, and `RegisterForm.Meta.fields` doesn't include `role` — so nothing in `request.POST` can ever set it, even a deliberately crafted extra `role=admin` field. Django `ModelForm`s only ever populate fields listed in `Meta.fields`; anything else in the POST body is silently ignored.
+- **Existing/legacy accounts:** `manage.py backfill_user_roles` (`users/management/commands/backfill_user_roles.py`) resets any account whose `role` value isn't one of `ROLE_CHOICES` to `"reader"` — never any other role — and, separately, repairs Group membership for accounts whose `role` is already valid but whose Groups never got synced to it. It's idempotent and wired into `docker/entrypoint.sh` right after `setup_roles`, so it runs automatically on every deploy rather than needing a manual shell command.
+
+### Root cause of the "Admin shown as Reader" bug
+`users/migrations/0002_customuser_role.py` added the `role` column with `default='reader'` via `AddField` — which, per Django's migration semantics, backfills that default onto **every existing row**, including any superuser created via `createsuperuser` *before* that migration ran. `createsuperuser` only ever sets `is_superuser`/`is_staff`/the username/password — it doesn't know about this project's custom `role` field, so it was never set explicitly either. The result: an account that's a genuine Django superuser (`is_superuser=True`, full DB/admin access) can have `role="reader"`, and anything reading `user.role` (the masthead's admin-only UI, `TWO_FACTOR_REQUIRED_ROLES`, `SINGLE_SESSION_ROLES`, `chat.permissions.SUPPORT_ROLES`, `PUBLIC_LOGIN_ROLES`) sees "Reader", not "Admin".
+
+### Relationship between Django superuser, `is_staff`, and the application Admin role
+These are three genuinely independent flags/values, and this project does **not** collapse them into one another automatically:
+
+- **`is_superuser`** — Django's own "bypass every permission check" flag. Only ever set explicitly (`createsuperuser`, or by another superuser in Django admin).
+- **`is_staff`** — required to log into `/admin/` at all. Also only ever set explicitly.
+- **Application `role="admin"`** — this project's own concept, checked directly in `user.role`-based code paths (2FA requirement, single-session eviction, chat support-agent access, the masthead's admin-only UI) and, via `sync_role_group`, in the "Admin" Django Group's `Post` permissions.
+
+Nothing in this codebase sets any one of these from the others — a superuser is not automatically given `role="admin"`, and setting `role="admin"` does not grant `is_staff`/`is_superuser`. This is deliberate: `manage.py backfill_user_roles` and the Django-admin role selector both intentionally avoid ever promoting an account to the application Admin role on their own (see "Protecting the Admin role" below) — only a human with shell/superuser access decides that, the same existing mechanism the test fixtures already use (`role="admin", is_staff=True`, set together by hand). Because Django admin's user-management screens require the `users.change_customuser`/`users.view_customuser` permissions — which no application-role Group grants — only a superuser (who bypasses permission checks entirely) can currently reach the role-management UI in practice, regardless of what `role` value a staff account happens to hold.
+
+### Protecting the Admin role in the Django admin UI
+`users/admin.py: CustomUserAdmin.get_form` strips `"admin"` out of the `role` dropdown's choices for any request user that isn't a Django superuser, leaving Reader/Contributor/Author/Editor as the only selectable values. A superuser still sees the full choice list — that's the one remaining path to grant the Admin role through the UI, consistent with it already being the only role that requires deliberate, out-of-band setup (`is_staff`/`is_superuser`) alongside it.
 
 ### Role summary table
 
@@ -95,7 +117,7 @@ A separate, `manage.py setup_roles`-driven system that creates five Django `Grou
 | Admin | Mandatory | Yes | No (uses `/admin/`) | Yes (via Group) | Yes (via Group) | Yes |
 | Editor | Mandatory | Yes | Yes | Yes (via Group) | Yes (via Group) | Yes |
 | Author | Mandatory | Yes | Yes | Yes (via Group) | No | No |
-| Contributor | n/a (not a `role` choice) | n/a | n/a | Group exists but no `role` value maps to it | No | No |
+| Contributor | Optional (self-service) | No | Yes | Yes (via Group) | No | No |
 | Reader | Optional (self-service) | No | Yes | No | No | No |
 
 ## Application security
@@ -120,5 +142,3 @@ A separate, `manage.py setup_roles`-driven system that creates five Django `Grou
 - CSP is Report-Only, not enforced (see `CSP_NOTES.md`).
 - CKEditor 4 is end-of-life with unfixed security issues (`ckeditor.W001`, confirmed by re-running `python manage.py check` for this documentation task).
 - HTTPS-related settings default to off and must be explicitly enabled per environment at deploy time.
-- The `Group`/`Permission` system's connection to `CustomUser.role` (i.e. how/whether users actually get added to their matching Group) is not implemented in this codebase — see Authorization section above.
-- The "Contributor" Django Group has no corresponding `CustomUser.role` value, so it's unclear from the code how (or whether) any account is ever actually a Contributor.

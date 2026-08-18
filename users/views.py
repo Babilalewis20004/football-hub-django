@@ -98,7 +98,7 @@ def register(request):
         {'form': form}
     )
 
-PUBLIC_LOGIN_ROLES = ("editor", "author", "reader")
+PUBLIC_LOGIN_ROLES = ("editor", "author", "contributor", "reader")
 
 
 def login_view(request):

@@ -23,6 +23,7 @@ class CustomUser(AbstractUser):
         ('admin', 'Admin'),
         ('editor', 'Editor'),
         ('author', 'Author'),
+        ('contributor', 'Contributor'),
         ('reader', 'Reader'),
     )
 
@@ -31,6 +32,14 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default='reader'
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Captured on both load-from-DB and in-memory construction, so the
+        # role-group sync signal can tell "role actually changed" apart
+        # from an unrelated save (e.g. login's last_login update) and
+        # avoid clobbering group membership that wasn't touched.
+        self._loaded_role = self.role
 
     def __str__(self):
         return self.username

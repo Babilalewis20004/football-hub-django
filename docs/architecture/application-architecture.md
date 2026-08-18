@@ -70,7 +70,7 @@ HTTP Response --> Browser
 | Services | `blog/services/posts.py` (`can_view_post`, `get_related_posts`), `blog/services/homepage.py` (`get_homepage_context`), `blog/services/comments.py` (`create_comment`), `blog/services/telegram.py` (`send_new_post_announcement`), `blog/services/search.py` (`search_posts_queryset` — defined but **not called by any view**; `blog/views/search.py` duplicates the same query logic inline instead) |
 | URLs | `blog/urls.py`, mounted at the site root (`''`) in `config/urls.py` |
 | Context processors | `blog/context_processors.py` — `sidebar_data` (categories/trending/latest — feeds the orphaned `blog/includes/sidebar.html`, which no template currently includes), `seo_defaults` (canonical URL, site name) |
-| Management commands | `blog/management/commands/setup_roles.py` — one-off command to create/refresh the `Admin`/`Editor`/`Author`/`Contributor`/`Reader` Django Groups and their permissions |
+| Management commands | `blog/management/commands/setup_roles.py` — creates/refreshes the `Admin`/`Editor`/`Author`/`Contributor`/`Reader` Django Groups and their permissions; `users/management/commands/backfill_user_roles.py` — resets any `CustomUser` with an unrecognized `role` to `reader` and repairs Group membership drift for the rest. Both are idempotent and run automatically on every container start (`docker/entrypoint.sh`), not just once at setup time. |
 | Sitemaps | `blog/sitemaps.py` — `PostSitemap`, `CategorySitemap`, `StaticViewSitemap`, wired into `config/urls.py`'s `sitemap.xml` |
 | Admin | `blog/admin.py` — plain `admin.site.register()` for `Category`, `Post`, `Comment`, `Bookmark` (no custom `ModelAdmin` classes) |
 

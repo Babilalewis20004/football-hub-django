@@ -35,7 +35,7 @@ erDiagram
         string bio
         string avatar
         string favorite_team
-        string role "admin|editor|author|reader"
+        string role "admin|editor|author|contributor|reader"
         bool is_staff
         bool is_superuser
         bool is_active

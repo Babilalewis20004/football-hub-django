@@ -40,7 +40,7 @@ Standard Django admin, with these registered models and customizations confirmed
 
 | App | Model | Customization |
 |---|---|---|
-| `users` | `CustomUser` | `CustomUserAdmin(UserAdmin)` — adds `role` column/filter plus two computed columns, "2FA enabled" (`has_2fa_enabled`) and "2FA required" (`requires_2fa`); adds a "Reset 2FA enrollment for selected users" bulk action |
+| `users` | `CustomUser` | `CustomUserAdmin(UserAdmin)` — list view shows username/email/role/active/staff/date joined plus two computed columns, "2FA enabled" (`has_2fa_enabled`) and "2FA required" (`requires_2fa`); filterable by role (and the stock is_staff/is_superuser/is_active); adds a "Reset 2FA enrollment for selected users" bulk action. The change form has a single "Application role" dropdown (Reader/Contributor/Author/Editor — "Admin" only appears for Django superusers) that drives Group membership automatically; the raw `groups` multi-select is intentionally removed from this form so there's exactly one place to change a user's role, not two that could disagree (see [security-architecture.md](../architecture/security-architecture.md)). |
 | `users` | `LoginAttempt` | Read-only (`has_add_permission`/`has_change_permission` return `False`); list/filter/search on `username`, `successful`, `reason`, `ip_address`, `timestamp` |
 | `blog` | `Category`, `Post`, `Comment`, `Bookmark` | Plain `admin.site.register()` — default Django admin UI, no custom `ModelAdmin` classes, no custom list displays/filters |
 | `chat` | `ChatSession` | `ChatSessionAdmin` — list display incl. status/agent/timestamps, inline read-only `ChatMessage` list |
