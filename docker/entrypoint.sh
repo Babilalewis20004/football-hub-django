@@ -43,6 +43,9 @@ python manage.py migrate --noinput
 echo "entrypoint: setting up default roles..."
 python manage.py setup_roles
 
+echo "entrypoint: backfilling user roles..."
+python manage.py backfill_user_roles
+
 # Skipped in the dev override (DJANGO_COLLECTSTATIC=0): with DEBUG=True,
 # django.contrib.staticfiles serves STATICFILES_DIRS directly, so a
 # collectstatic pass just slows down container start for no benefit.

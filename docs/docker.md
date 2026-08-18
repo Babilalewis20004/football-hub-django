@@ -129,6 +129,49 @@ docker compose exec web python manage.py migrate
 docker compose exec web python manage.py createsuperuser
 ```
 
+`createsuperuser` only sets Django's own `is_superuser`/`is_staff` flags —
+it has no concept of this project's `CustomUser.role` field, so the new
+account's application role defaults to `reader` like any other new user.
+This is a real, previously-hit source of confusion (a genuine superuser
+whose role shows as "Reader" everywhere in the app) — see "Root cause of
+the 'Admin shown as Reader' bug" in
+[security-architecture.md](architecture/security-architecture.md). To make
+the new account the application's Admin as well, set its role explicitly
+right after creating it:
+
+```bash
+docker compose exec web python manage.py shell -c "
+from django.contrib.auth import get_user_model
+u = get_user_model().objects.get(username='<the-username-you-just-created>')
+u.role = 'admin'
+u.save()
+"
+```
+
+`u.save()` triggers `users.signals.sync_role_group`, which adds the
+account to the "Admin" Django Group (and removes it from any other
+application-role Group) automatically — no separate Group management step
+needed. This deliberately stays a manual, shell-driven step rather than
+something `createsuperuser` or the entrypoint does automatically: neither
+"every superuser" nor "every is_staff account" should be silently
+promoted to the application's Admin role (see the same section in
+security-architecture.md for why).
+
+## Role setup and backfill
+
+Two idempotent management commands run automatically on every container
+start (`docker/entrypoint.sh`, right after migrations), so a fresh
+deployment never needs a manual step for either:
+
+- `python manage.py setup_roles` — creates/refreshes the five application
+  Django Groups (Admin/Editor/Author/Contributor/Reader) and their
+  `Post` permissions.
+- `python manage.py backfill_user_roles` — resets any account with an
+  unrecognized `role` value to `reader`, and repairs Group membership for
+  any account whose `role` is valid but whose Groups never got synced to
+  it (e.g. accounts created before `users.signals.sync_role_group`
+  existed). Existing valid roles (including `admin`) are never overwritten.
+
 ## Run tests
 
 The test runners (`pytest`, `pytest-django`, `pytest-cov`) are dev

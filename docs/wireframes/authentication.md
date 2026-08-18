@@ -14,7 +14,7 @@
 |                                                      |
 |   Username: [......................]                |
 |   Password: [......................]                |
-|   Role:     [ Editor v ] (select: Editor/Author/Reader) |
+|   Role:     [ Editor v ] (select: Editor/Author/Contributor/Reader) |
 |                                                      |
 |   {% if captcha_form %}                              |
 |   CAPTCHA image: [ 8 x k 3 f ]  Enter: [........]     |
@@ -37,7 +37,7 @@
 - Wrong password, wrong role, or nonexistent username → identical generic "Invalid credentials" message (anti-enumeration).
 - On success with 2FA owed → redirected to `/users/2fa/setup/` or `/users/2fa/verify/` before reaching the app.
 
-**Note:** admin accounts cannot use this form (role choices are Editor/Author/Reader only) — they authenticate at `/admin/` (see [admin.md](admin.md)).
+**Note:** admin accounts cannot use this form (role choices are Editor/Author/Contributor/Reader only) — they authenticate at `/admin/` (see [admin.md](admin.md)).
 
 ## Register
 

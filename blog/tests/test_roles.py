@@ -47,3 +47,18 @@ class RolePermissionTests(TestCase):
         self.assertFalse(
             reader.has_perm("blog.add_post")
         )
+
+    def test_contributor_can_create_post_but_cannot_publish(self):
+        contributor = User.objects.create_user(
+            username="contributor",
+            password="pass123"
+        )
+
+        contributor.groups.add(Group.objects.get(name="Contributor"))
+
+        self.assertTrue(
+            contributor.has_perm("blog.add_post")
+        )
+        self.assertFalse(
+            contributor.has_perm("blog.can_publish_post")
+        )
