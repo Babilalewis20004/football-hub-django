@@ -97,3 +97,7 @@ python -m pytest -v
 See [TESTING.md](TESTING.md) for coverage details, or
 [docs/deployment.md#16-running-tests](docs/deployment.md#16-running-tests)
 for running tests inside Docker.
+
+## License
+
+[MIT](LICENSE)
