@@ -50,6 +50,34 @@ Bootstrap 5 + HTMX · Docker Compose · pytest
 See [docs/architecture/technology-stack.md](docs/architecture/technology-stack.md)
 for the full, verified dependency list.
 
+## Architecture & database
+
+Design docs are written from the actual implementation (models, views, URLs,
+middleware, signals) rather than from intent, with diagrams for the
+non-obvious flows:
+
+- [docs/architecture/system-architecture.md](docs/architecture/system-architecture.md) —
+  high-level component diagram and layer-by-layer explanation
+- [docs/architecture/application-architecture.md](docs/architecture/application-architecture.md) —
+  internal Django structure: routing, views, forms, services, middleware,
+  per-app breakdown
+- [docs/architecture/security-architecture.md](docs/architecture/security-architecture.md) —
+  authentication, authorization, session security, application security
+  controls
+- [docs/architecture/deployment-architecture.md](docs/architecture/deployment-architecture.md) —
+  production topology, environment variables, dev-vs-prod differences
+- [docs/architecture/data-flow.md](docs/architecture/data-flow.md) — data flow
+  diagrams for auth, publishing, search, chat, Telegram, and feedback/subscription
+- [docs/architecture/authentication-flow.md](docs/architecture/authentication-flow.md) —
+  login → lockout/CAPTCHA → 2FA → session flowchart
+- [docs/architecture/realtime-chat-flow.md](docs/architecture/realtime-chat-flow.md) —
+  Django Channels architecture with sequence diagrams
+- [docs/database/erd.md](docs/database/erd.md) — Entity-Relationship Diagram
+- [docs/database/schema.md](docs/database/schema.md) — full field-by-field
+  table definitions and migration history
+- [docs/database/relationships.md](docs/database/relationships.md) — FK
+  delete behavior, M2M relationships, unique constraints, cascade risks
+
 ## Getting started
 
 Docker Compose is the recommended way to run this project locally — it
@@ -71,6 +99,37 @@ troubleshooting, and the production Docker Compose configuration. For a
 production deployment to a cloud provider, see
 [docs/deployment/aws.md](docs/deployment/aws.md) or
 [docs/deployment/gcp.md](docs/deployment/gcp.md).
+
+## Environment variables
+
+Copied from [.env.example](.env.example), which has the full inline
+explanations. The Docker Compose defaults work out of the box; only
+`SECRET_KEY` needs to be set for local dev.
+
+| Variable | Purpose |
+|---|---|
+| `SECRET_KEY` | Django secret key |
+| `DEBUG` | Django debug mode (`True` for local dev only) |
+| `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_HOST` / `DB_PORT` | Database connection Django actually uses |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Used only to initialize the Postgres container itself — must match the `DB_*` values above |
+| `ALLOWED_HOSTS` | Django's allowed-hosts list |
+| `REDIS_URL` | Channel layer for live chat across multiple workers; unset falls back to an in-memory layer (fine for a single dev process) |
+| `SECURE_SSL_REDIRECT` / `SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` / `SECURE_HSTS_SECONDS` | Production-only HTTPS hardening — leave unset for local HTTP dev |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHANNEL_ID` | Optional — enables the Telegram publish announcements (see [TELEGRAM.md](TELEGRAM.md)) |
+
+See [docs/architecture/deployment-architecture.md](docs/architecture/deployment-architecture.md)
+for how these map to dev vs. production behavior.
+
+## Project structure
+
+The project is a standard Django multi-app layout: `config/` holds
+settings/URLs/ASGI-WSGI entrypoints; `users/` owns authentication, 2FA,
+lockout/CAPTCHA, and roles; `blog/` owns posts, categories, comments, and
+the editorial workflow; `chat/` owns the live chat and support inbox
+(WebSocket consumers + HTTP views); and `pages/` owns static/informational
+pages and the feedback/subscribe forms. See
+[docs/architecture/application-architecture.md](docs/architecture/application-architecture.md#app-by-app-breakdown)
+for the full per-app breakdown of models, views, services, and URLs.
 
 ## Documentation
 
@@ -107,6 +166,9 @@ CI pipeline (see [docs/security.md](docs/security.md)):
 ```bash
 python -m pytest -v
 ```
+
+**256 tests, 99% coverage** (whole project — see [TESTING.md](TESTING.md) for
+the per-file breakdown).
 
 See [TESTING.md](TESTING.md) for coverage details, or
 [docs/deployment.md#16-running-tests](docs/deployment.md#16-running-tests)
