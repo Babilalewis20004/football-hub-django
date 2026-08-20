@@ -8,6 +8,9 @@ locally. No prior familiarity with this codebase is assumed.
 > Looking for terse day-to-day commands instead of a full walkthrough? See
 > [docker.md](docker.md). For *why* the Docker setup is shaped the way it
 > is, see [architecture/deployment-architecture.md](architecture/deployment-architecture.md).
+> Deploying to a cloud provider instead of a single host you manage
+> yourself? See [deployment/aws.md](deployment/aws.md) or
+> [deployment/gcp.md](deployment/gcp.md).
 
 ## Contents
 

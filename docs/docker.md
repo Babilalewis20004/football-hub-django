@@ -260,7 +260,11 @@ boot.
 ## Deployment platform compatibility
 
 The image is portable to any container-hosting platform (Fly.io, Railway,
-Render, ECS, Cloud Run, a bare VM with Docker, etc.), not tied to Compose:
+Render, ECS, Cloud Run, a bare VM with Docker, etc.), not tied to Compose.
+For complete, production-oriented walkthroughs of two of these, see
+[deployment/aws.md](deployment/aws.md) (ECS + Fargate) and
+[deployment/gcp.md](deployment/gcp.md) (Cloud Run) — the general
+compatibility notes below are what those two guides build on.
 
 - **Port**: `docker/entrypoint.sh` binds Daphne to `$PORT` if set, falling
   back to `8000`. Platforms that inject their own port (Cloud Run, Render,

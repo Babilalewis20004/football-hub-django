@@ -106,7 +106,13 @@ report for the full list of what was (and deliberately wasn't) touched.
 
 These are explicitly **not** part of the current implementation — listed
 so they aren't mistaken for gaps in this Dockerization, and to distinguish
-"not needed for this scope" from "not done":
+"not needed for this scope" from "not done". Two of these — TLS
+termination and multi-host orchestration — are addressed by managed
+platforms in [../deployment/aws.md](../deployment/aws.md) and
+[../deployment/gcp.md](../deployment/gcp.md) (ALB/ACM and ECS Fargate on
+AWS; Cloud Run's built-in TLS and autoscaling on GCP), without changing
+anything in this repository's own Docker configuration — those guides
+deploy the same image described here.
 
 - **TLS termination** — either a managed load balancer in front of the
   Docker host, or extending `docker/nginx/default.conf` with real

@@ -12,6 +12,7 @@ Football Hub is a Django 5.2 monolith: server-rendered templates + Bootstrap 5 +
 - [architecture/application-architecture.md](architecture/application-architecture.md) — internal Django structure: routing, views, forms, services, middleware, per-app breakdown
 - [architecture/security-architecture.md](architecture/security-architecture.md) — authentication, authorization, session security, application security controls
 - [architecture/deployment-architecture.md](architecture/deployment-architecture.md) — implied production topology, environment variables, dev-vs-prod differences, and current Docker setup
+- [deployment/README.md](deployment/README.md) — cloud deployment index; [deployment/aws.md](deployment/aws.md) (AWS/ECS) and [deployment/gcp.md](deployment/gcp.md) (GCP/Cloud Run) production deployment guides
 - [security.md](security.md) — DevSecOps pipeline: SAST, dependency/secret/container scanning, PR gating, and how to run the same scans locally
 - [architecture/data-flow.md](architecture/data-flow.md) — six data flow diagrams covering auth, publishing, search, chat, Telegram, feedback/subscription
 - [architecture/authentication-flow.md](architecture/authentication-flow.md) — the complete login → lockout/CAPTCHA → 2FA → session flowchart
