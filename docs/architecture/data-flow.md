@@ -107,6 +107,33 @@ Atomic view-count increment (F("views") + 1) + related_posts computed
 Rendered blog/post_detail.html
 ```
 
+### Status state diagram
+
+The five real `Post.status` values (`blog/models/post.py:49-60`) and the transitions between them — no "Pending"/"Rejected"/"Revision"/"Archived" state exists in the code, only what's below:
+
+```text
+                         author/contributor: submit for review
+              ┌─────────────────────────────────────────────┐
+              │                                               ▼
+           Draft                                        In Review
+              ▲                                          │      │
+              │  author/contributor: withdraw ────────────┘      │
+              │                                                   │ editor/admin:
+              │                                                   │ request changes
+              │                                                   ▼
+              │                                          Needs Changes
+              │                                                   │
+              └───────────────────────────────────────────────────┘
+                       author/contributor: submit for review (loop)
+
+In Review ──editor/admin: approve──> Approved ──editor/admin: publish──> Published
+```
+
+Notes:
+- Author and Contributor follow the identical path above — both actions (`post_submit_for_review`, `post_withdraw_from_review`) are gated on `post.author == request.user`, not on role/Group (see the editorial action matrix in [security-architecture.md](security-architecture.md)).
+- `post_publish` doesn't require `status == "approved"` — an Editor/Admin holding `blog.can_publish_post` can publish directly from `draft` or `in_review`, bypassing the Approved step shown above.
+- "Withdraw from review" (`in_review` → `draft`) is author/contributor-initiated and distinct from "Request changes" (`in_review` → `needs_changes`), which is editor/admin-initiated.
+
 ## 3. Search
 
 ```text

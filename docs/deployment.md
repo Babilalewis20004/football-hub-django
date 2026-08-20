@@ -150,7 +150,7 @@ fail with an authentication error.
 | `EMAIL_BACKEND` | Console backend (prints emails to stdout) | Password-reset email delivery |
 | `DEFAULT_FROM_EMAIL` | `noreply@footballhub.local` | From-address for outgoing email |
 | `LOGIN_MAX_FAILED_ATTEMPTS` | `5` | Login lockout threshold |
-| `LOGIN_LOCKOUT_MINUTES` | `15` | Login lockout duration |
+| `LOGIN_LOCKOUT_MINUTES` | `2` | Login lockout duration |
 | `LOGIN_CAPTCHA_AFTER_ATTEMPTS` | `2` | Progressive CAPTCHA threshold |
 | `SESSION_INACTIVITY_TIMEOUT` | `300` (5 min) | Session auto-logout window, seconds |
 | `CSP_VIOLATION_REPORT_PATH` | `/csp-report/` | CSP report-collection endpoint |

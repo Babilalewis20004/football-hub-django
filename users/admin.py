@@ -7,7 +7,7 @@ from .forms import LockoutAwareAdminAuthenticationForm
 from .models import CustomUser, LoginAttempt
 from .twofactor import user_has_2fa_enabled, user_requires_2fa, reset_2fa_for_user
 
-# Applies the same 5-attempt / 15-minute lockout used by the public login
+# Applies the same 5-attempt / 2-minute lockout used by the public login
 # view to /admin/ - see LockoutAwareAdminAuthenticationForm.
 admin.site.login_form = LockoutAwareAdminAuthenticationForm
 

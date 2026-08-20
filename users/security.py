@@ -23,7 +23,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from .models import LoginAttempt
 
 MAX_FAILED_ATTEMPTS = getattr(settings, "LOGIN_MAX_FAILED_ATTEMPTS", 5)
-LOCKOUT_DURATION = timedelta(minutes=getattr(settings, "LOGIN_LOCKOUT_MINUTES", 15))
+LOCKOUT_DURATION = timedelta(minutes=getattr(settings, "LOGIN_LOCKOUT_MINUTES", 2))
 CAPTCHA_AFTER_ATTEMPTS = getattr(settings, "LOGIN_CAPTCHA_AFTER_ATTEMPTS", 2)
 
 LOCKOUT_MESSAGE_TEMPLATE = (

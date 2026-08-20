@@ -36,7 +36,7 @@ Standard Django `authenticate()`/`login()` (`django.contrib.auth`), backed by `C
 **Unusual, load-bearing detail:** the public login form (`templates/users/login.html`) requires the user to additionally select a **role** (`Editor`/`Author`/`Reader`) from a dropdown. `users/views.py: login_view` rejects the attempt — with the same generic error as a wrong password — if `user.role != role`. This means a valid password alone is not sufficient; the submitted role must also match the account's actual role. `admin` accounts are excluded from `PUBLIC_LOGIN_ROLES` entirely and must authenticate through `/admin/` instead.
 
 ### Login attempt tracking & account lockout
-`users/security.py` + `users/models.py: LoginAttempt`. Every attempt (success or failure, real or nonexistent username) is recorded. Lockout state is *derived* from the most recent `LOGIN_MAX_FAILED_ATTEMPTS` (default 5) rows for a username, not stored as a counter — if all of them are failures and the latest is within `LOGIN_LOCKOUT_MINUTES` (default 15), the account is locked. A successful attempt anywhere in that window breaks the streak.
+`users/security.py` + `users/models.py: LoginAttempt`. Every attempt (success or failure, real or nonexistent username) is recorded. Lockout state is *derived* from the most recent `LOGIN_MAX_FAILED_ATTEMPTS` (default 5) rows for a username, not stored as a counter — if all of them are failures and the latest is within `LOGIN_LOCKOUT_MINUTES` (default 2), the account is locked. A successful attempt anywhere in that window breaks the streak.
 
 **Deliberate design choice:** lockout is keyed on the *submitted username string*, not on whether it maps to a real account, and the lockout/CAPTCHA/error responses are identical either way — this prevents the login form from being usable to enumerate valid usernames.
 
@@ -85,6 +85,25 @@ A `manage.py setup_roles`-driven system that creates five Django `Group`s — **
 | Author | `add_post`, `view_post` only — **deliberately excludes `change_post`** (a code comment explains: that permission is checked globally, not per-object, so granting it would let any author edit every other author's posts; authors edit their own posts via an object-level ownership check in `post_update` instead, which needs no permission) |
 | Contributor | `add_post`, `view_post` (same as Author) |
 | Reader | `view_post` only |
+
+### Editorial action matrix
+
+The table above lists raw Django permission codenames; this is the same authorization mapped onto the actual actions available in `blog/views/posts.py`, including two ownership-gated actions (`post_submit_for_review`, `post_withdraw_from_review`) that have no Django `Permission` at all — they're checked purely by `post.author == request.user`, so any role that can create posts can submit/withdraw their own, regardless of Group.
+
+| Role | Create Articles | Edit Own Articles | Edit Others' Articles | Submit for Review | Withdraw from Review | Approve / Request Changes | Publish | Delete |
+|---|---|---|---|---|---|---|---|---|
+| **Admin** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Editor** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Author** | ✅ | ✅¹ | ❌ | ✅² | ✅² | ❌ | ❌ | ❌ |
+| **Contributor** | ✅ | ✅¹ | ❌ | ✅² | ✅² | ❌ | ❌ | ❌ |
+| **Reader** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+¹ Own post only, and only while it's still `draft` or `needs_changes` — the author loses edit access to their own post the moment it's `published` (`post_update`, `blog/views/posts.py:131-133`). Admin/Editor are exempt from this: holding `blog.change_post` skips both the ownership check *and* the published-state check (line 120-121), so they can edit any post in any state, including already-published ones.
+² Own post only (`post.author == request.user`); "Submit for review" requires status `draft`/`needs_changes`, "Withdraw" requires `in_review` (`blog/views/posts.py:246`, `273`).
+
+Two behaviors worth calling out because they're easy to assume otherwise:
+- There is no "Reject" action or status — a post an Editor/Admin sends back is `needs_changes` (`post_request_changes`), and the author resubmits it through the same `post_submit_for_review` action, not a separate re-draft step.
+- `post_publish` (`blog/views/posts.py:163-188`) does not require the post to already be `approved` — it only checks the `blog.can_publish_post` permission. An Editor/Admin can publish a post straight out of `draft` or `in_review`, skipping the approval step entirely.
 
 ### Keeping the two in sync: `users/signals.py: sync_role_group`
 A `post_save` signal on `CustomUser` that runs whenever `role` actually changes (new user, or an existing user's `role` was edited) and calls `apply_role_group()`: it adds the user to the one Group matching their new `role` and removes them from the other four application-role Groups, so a role change can never leave a user holding two roles' worth of Group permissions at once (e.g. still in "Editor" after being demoted to "Reader"). The mapping itself (`ROLE_GROUP_NAMES`) is derived directly from `CustomUser.ROLE_CHOICES` rather than duplicated, since the choice labels (Admin/Editor/Author/Contributor/Reader) already match the Group names exactly.

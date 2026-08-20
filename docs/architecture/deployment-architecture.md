@@ -202,7 +202,7 @@ so they aren't mistaken for gaps in this Dockerization, and to distinguish
 | `EMAIL_BACKEND` | No | `django.core.mail.backends.console.EmailBackend` | Password-reset email delivery |
 | `DEFAULT_FROM_EMAIL` | No | `noreply@footballhub.local` | From-address for outgoing email |
 | `LOGIN_MAX_FAILED_ATTEMPTS` | No | `5` | Lockout threshold |
-| `LOGIN_LOCKOUT_MINUTES` | No | `15` | Lockout duration |
+| `LOGIN_LOCKOUT_MINUTES` | No | `2` | Lockout duration |
 | `LOGIN_CAPTCHA_AFTER_ATTEMPTS` | No | `2` | Progressive CAPTCHA threshold |
 | `SESSION_INACTIVITY_TIMEOUT` | No | `300` (5 min) | Session auto-logout window |
 | `CSP_VIOLATION_REPORT_PATH` | No | `/csp-report/` | CSP report-collection endpoint |
