@@ -39,7 +39,6 @@ Thumbs.db
 
 # Docs / non-runtime project files (not needed inside the image)
 docs/
-Content Security policy Docs/
 *.md
 
 # Claude Code project metadata
