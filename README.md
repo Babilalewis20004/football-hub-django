@@ -9,6 +9,20 @@ roles, and a live chat/support-inbox feature built on Django Channels. It
 is a server-rendered monolith (Django templates + Bootstrap 5 + a little
 HTMX) backed by PostgreSQL, with Redis powering real-time messaging.
 
+## Screenshots
+
+| Homepage | Post detail |
+|---|---|
+| ![Homepage](docs/screenshots/homepage.png) | ![Post detail](docs/screenshots/post-detail.png) |
+
+| Editorial workflow (Editor dashboard) | Author dashboard |
+|---|---|
+| ![Editor dashboard](docs/screenshots/editor-dashboard.png) | ![Author dashboard](docs/screenshots/author-dashboard.png) |
+
+| Support inbox (live chat) | Login (role-based + 2FA) |
+|---|---|
+| ![Support inbox](docs/screenshots/support-inbox.png) | ![Login](docs/screenshots/login.png) |
+
 ## Features
 
 - **Editorial workflow** — role-based publishing pipeline (Admin / Editor

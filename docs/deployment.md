@@ -708,7 +708,7 @@ Per [docker.md](docker.md#limitations-read-before-calling-this-production-ready)
   front will break the site.
 - **Review CSRF/CORS/security settings** in `config/settings.py` before
   going live — this project already ships a Content-Security-Policy
-  (currently Report-Only — see [../Content Security policy Docs/CSP_NOTES.md](../Content%20Security%20policy%20Docs/CSP_NOTES.md)),
+  (currently Report-Only — see [security/csp/CSP_NOTES.md](security/csp/CSP_NOTES.md)),
   CSRF cookie hardening, session inactivity timeouts, and login
   lockout/CAPTCHA controls; understand what's already enabled before
   changing it.
