@@ -53,18 +53,40 @@ Then open <http://localhost:8000>.
 
 See the [Deployment Guide](docs/deployment.md) for complete local setup
 and deployment instructions, including environment configuration,
-troubleshooting, and the production Docker Compose configuration.
+troubleshooting, and the production Docker Compose configuration. For a
+production deployment to a cloud provider, see
+[docs/deployment/aws.md](docs/deployment/aws.md) or
+[docs/deployment/gcp.md](docs/deployment/gcp.md).
 
 ## Documentation
 
 - [docs/deployment.md](docs/deployment.md) — full local setup and
   deployment guide
 - [docs/docker.md](docs/docker.md) — day-to-day Docker Compose commands
+- [docs/deployment/aws.md](docs/deployment/aws.md) — production deployment
+  to AWS (ECS Fargate, RDS, ElastiCache)
+- [docs/deployment/gcp.md](docs/deployment/gcp.md) — production deployment
+  to GCP (Cloud Run, Cloud SQL, Memorystore)
 - [docs/README.md](docs/README.md) — architecture, database schema, and
   UI documentation index
 - [docs/security.md](docs/security.md) — CI/CD security pipeline
   (SAST, dependency/secret/container scanning)
 - [TESTING.md](TESTING.md) — running the test suite
+
+## Useful links
+
+Official repositories/docs for the security-scanning tools used in the
+CI pipeline (see [docs/security.md](docs/security.md)):
+
+- **Bandit** (SAST) — [PyCQA/bandit](https://github.com/PyCQA/bandit) ·
+  [docs](https://bandit.readthedocs.io)
+- **Semgrep** (SAST) — [semgrep/semgrep](https://github.com/semgrep/semgrep) ·
+  [docs](https://semgrep.dev/docs)
+- **Trivy** (container/filesystem scanning) —
+  [aquasecurity/trivy](https://github.com/aquasecurity/trivy) ·
+  [docs](https://aquasecurity.github.io/trivy)
+- **Gitleaks** (secret scanning) —
+  [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks)
 
 ## Testing
 
