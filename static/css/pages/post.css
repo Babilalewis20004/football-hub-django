@@ -232,6 +232,10 @@
     margin-bottom: 15px;
 }
 
+.ig-comments .text-muted {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
 .ig-comment {
     display: flex;
     gap: 12px;

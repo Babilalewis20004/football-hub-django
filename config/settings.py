@@ -308,7 +308,7 @@ OTP_ADMIN_HIDE_SENSITIVE_DATA = True
 
 # Login attempt lockout (see users.security)
 LOGIN_MAX_FAILED_ATTEMPTS = config("LOGIN_MAX_FAILED_ATTEMPTS", default=5, cast=int)
-LOGIN_LOCKOUT_MINUTES = config("LOGIN_LOCKOUT_MINUTES", default=15, cast=int)
+LOGIN_LOCKOUT_MINUTES = config("LOGIN_LOCKOUT_MINUTES", default=2, cast=int)
 
 # Number of consecutive recent failures (see users.security.failed_streak) after
 # which a CAPTCHA is required on the next login attempt for that username.

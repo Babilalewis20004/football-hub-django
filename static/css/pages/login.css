@@ -79,6 +79,39 @@
     color: #fff;
 }
 
+/* ROLE DROPDOWN (native <select>) */
+.login-box select.login-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23e5e5ea' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 8px;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+/* Most browsers render the open <option> list as a native OS popup and only
+   accept background/color on the options themselves — a dark popup is not
+   reliably stylable (Safari in particular ignores it), so we use a soft,
+   high-contrast light surface here instead of pure white. */
+.login-box select.login-input option {
+    background-color: #f3f3f7;
+    color: #1c1c22;
+    padding: 10px 14px;
+}
+
+.login-box select.login-input option:checked,
+.login-box select.login-input option:hover {
+    background-color: #e3e3ea;
+    color: #111;
+}
+
+.login-box select.login-input option[value=""] {
+    color: #5b5b66;
+}
+
 .login-box .form-text {
     color: #9a9aa5;
     text-align: left;
