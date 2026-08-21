@@ -1,0 +1,23 @@
+# ZAP baseline scan gate config, used only by the dast-zap job's second
+# (gate) pass in .github/workflows/security.yml - see docs/security.md §7a.
+#
+# Unlisted rule IDs keep zap-baseline.py's own default classification
+# (WARN) and are visible in the full report but never fail the job (the
+# gate pass runs with -I, which suppresses failure on WARN-only results).
+# Only the rule IDs listed below as FAIL can fail the gate. This mirrors
+# the rest of the pipeline's severity-filtering philosophy (Bandit
+# medium+, Semgrep ERROR, Trivy CRITICAL/HIGH): block merges on
+# real, actionable findings, not on informational/low-risk noise.
+#
+# Deliberately a conservative starter set: each ID below was verified
+# individually against ZAP's own alert reference (zaproxy.org/docs/alerts/<id>)
+# on 2026-08-21, rather than copied from an unverified list. Expand this
+# file after reviewing the dast-zap job's first few real full-report runs
+# (uploaded as the zap-report artifact) for other alert types this app
+# actually surfaces.
+40012	FAIL	(Cross Site Scripting (Reflected))
+40014	FAIL	(Cross Site Scripting (Persistent))
+90020	FAIL	(Remote OS Command Injection)
+40018	FAIL	(SQL Injection)
+6	FAIL	(Path Traversal)
+7	FAIL	(Remote File Inclusion)

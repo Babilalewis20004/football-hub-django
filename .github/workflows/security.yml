@@ -456,6 +456,123 @@ jobs:
           exit-code: "1"
 
   # ---------------------------------------------------------------------
+  # DAST: OWASP ZAP baseline scan. Everything above analyzes code/deps/
+  # images at rest; this is the pipeline's only job that starts the real
+  # app and attacks it over HTTP like an external client would, so it
+  # catches runtime/config issues the static tools structurally can't see
+  # (e.g. missing security headers, cookie flags, actual reflected
+  # behavior vs. a pattern match). Same two-pass pattern as Bandit/Semgrep:
+  # an unfiltered baseline scan for full visibility, then a second pass
+  # gated on .zap/rules.tsv so the merge gate only fires on the small set
+  # of high-risk alert types verified there (see that file's header) -
+  # not on every informational/low-risk finding, matching this pipeline's
+  # severity-filtering philosophy elsewhere. See docs/security.md §7a.
+  # ---------------------------------------------------------------------
+  dast-zap:
+    name: DAST - OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: football_hub_ci
+          POSTGRES_USER: football_hub_ci
+          POSTGRES_PASSWORD: football_hub_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U football_hub_ci -d football_hub_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
+    env:
+      # Same CI-only dummy values as the test job. DEBUG stays False (a
+      # DEBUG=True app would itself trip ZAP's own debug-mode alert and
+      # doesn't reflect production). SECURE_SSL_REDIRECT/SESSION_COOKIE_SECURE/
+      # CSRF_COOKIE_SECURE are deliberately left at their False defaults
+      # here (unlike django-security-checks' simulated-HTTPS posture):
+      # this runner has no TLS termination, so an SSL redirect would just
+      # bounce every request ZAP makes and a Secure-only CSRF cookie would
+      # break every form submission the scan tries, collapsing the crawl
+      # to a single page. Scanning over plain HTTP locally is the standard
+      # way to run a baseline DAST scan in CI; the HTTPS-specific config
+      # itself is already covered by django-security-checks.
+      SECRET_KEY: "ci-only-dummy-key-never-used-in-production-8mP3qR7vN2wL9xJ4hT6yB1cF5dQ0sA"
+      DEBUG: "False"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DB_NAME: football_hub_ci
+      DB_USER: football_hub_ci
+      DB_PASSWORD: football_hub_ci_password
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Apply migrations and prepare static files
+        run: |
+          python manage.py migrate --noinput
+          python manage.py setup_roles
+          python manage.py backfill_user_roles
+          python manage.py collectstatic --noinput
+
+      - name: Start app (Daphne) in the background
+        run: |
+          nohup daphne -b 127.0.0.1 -p 8000 config.asgi:application > daphne.log 2>&1 &
+          echo $! > daphne.pid
+
+      - name: Wait for app to accept connections
+        run: |
+          for i in $(seq 1 30); do
+            python -c "import socket; socket.create_connection(('127.0.0.1', 8000), timeout=3)" 2>/dev/null && exit 0
+            sleep 2
+          done
+          echo "App never became reachable on :8000 - daphne.log follows:"
+          cat daphne.log
+          exit 1
+
+      - name: ZAP baseline - full report (all findings, never fails)
+        run: |
+          docker run --rm --network host \
+            -v "${{ github.workspace }}:/zap/wrk:rw" \
+            -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:8000 -I \
+            -J zap-report.json -r zap-report.html
+
+      - name: Upload ZAP report artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zap-report
+          path: |
+            zap-report.json
+            zap-report.html
+          retention-days: 30
+
+      - name: ZAP baseline - severity gate (fails only on .zap/rules.tsv FAIL rules)
+        run: |
+          docker run --rm --network host \
+            -v "${{ github.workspace }}:/zap/wrk:rw" \
+            -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:8000 -I \
+            -c /zap/wrk/.zap/rules.tsv
+
+      - name: Stop app
+        if: always()
+        run: kill "$(cat daphne.pid)" 2>/dev/null || true
+
+  # ---------------------------------------------------------------------
   # Single aggregate status for branch protection. Individual jobs above
   # remain independently visible/required if preferred - see
   # docs/security.md for the recommended branch-protection configuration.
@@ -472,6 +589,7 @@ jobs:
       - gitleaks
       - trivy-fs
       - trivy-image
+      - dast-zap
     runs-on: ubuntu-latest
     steps:
       - name: Evaluate job results
@@ -484,6 +602,7 @@ jobs:
           echo "gitleaks: ${{ needs.gitleaks.result }}"
           echo "trivy-fs: ${{ needs.trivy-fs.result }}"
           echo "trivy-image: ${{ needs.trivy-image.result }}"
+          echo "dast-zap: ${{ needs.dast-zap.result }}"
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]] || [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
             echo "One or more security pipeline jobs failed."
             exit 1
