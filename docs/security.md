@@ -41,6 +41,7 @@ Security Pipeline (.github/workflows/security.yml)
 ├── gitleaks                  — secret scan (full git history)
 ├── trivy-fs                  — filesystem vulnerability + IaC/Dockerfile misconfig scan
 ├── trivy-image                — builds the Dockerfile and scans the resulting image
+├── dast-zap                  — OWASP ZAP baseline scan against the running app
 └── security-gate             — aggregates the above into one required status check
 ```
 
@@ -180,6 +181,53 @@ dependency ships an example key in its own code.
   the pipeline permanently red for reasons no PR can fix. Every finding
   (fixed or not, any severity) is still visible in the full report.
 
+## 7a. DAST — OWASP ZAP baseline scan
+
+Every other job in this pipeline analyzes source, dependencies, or a built
+image *at rest*. `dast-zap` is the one job that starts the real
+application and attacks it over HTTP the way an external client would —
+it's the only place that would catch a purely runtime/config issue (e.g.
+a missing security header, a cookie flag, actual reflected behavior)
+rather than a static pattern in the code.
+
+- **How the app is started:** the job brings up the same Postgres service
+  container as `test`, then runs the exact same startup sequence as
+  `docker/entrypoint.sh` (`migrate` → `setup_roles` →
+  `backfill_user_roles` → `collectstatic`) before starting `daphne` on
+  `127.0.0.1:8000` in the background. `DEBUG=False`, matching production
+  (a `DEBUG=True` app would itself trip ZAP's debug-mode alert).
+- **Deliberately scanned over plain HTTP:** unlike `django-security-checks`,
+  this job does **not** set `SECURE_SSL_REDIRECT`/`SESSION_COOKIE_SECURE`/
+  `CSRF_COOKIE_SECURE`. This runner has no TLS termination in front of it —
+  turning those on here would make the app redirect every request ZAP
+  sends (or silently drop the CSRF cookie on every form submission),
+  collapsing the crawl to effectively one page. Scanning a locally-started
+  app over HTTP is the standard way to run baseline DAST in CI; the
+  HTTPS-specific settings themselves are already covered by
+  `django-security-checks` (§2).
+- **Scanner:** `ghcr.io/zaproxy/zaproxy:stable`'s `zap-baseline.py`
+  (passive scan + spider, not the more intrusive Full Scan), run directly
+  via `docker run --network host` so the ZAP container can reach the app
+  listening on the runner's `localhost:8000`.
+- **Failure policy:** same two-pass pattern as Bandit/Semgrep/Trivy. The
+  first pass (`-I`, no rules file) never fails and writes an unfiltered
+  JSON + HTML report, uploaded as the `zap-report` workflow artifact — ZAP
+  has no SARIF exporter, same situation as pip-audit (§8), so this is an
+  artifact rather than a Security-tab upload. The second pass adds
+  `-c .zap/rules.tsv`, which reclassifies a small, individually-verified
+  set of high-risk alert types (reflected/persistent XSS, SQL injection,
+  remote OS command injection, path traversal, remote file inclusion) as
+  `FAIL`; combined with `-I` (which suppresses failing on the default
+  `WARN` classification everything else gets), the gate only fires on
+  those specific high-risk categories — not on every informational/
+  low-risk finding. See `.zap/rules.tsv`'s header for exactly which rule
+  IDs are covered and how they were verified.
+- **Tune after the first real run:** the starter rule set in
+  `.zap/rules.tsv` is intentionally conservative. Review the first few
+  `zap-report` artifacts for alert types this app actually surfaces and
+  expand the file from there, the same way Bandit's B105/B106 skip was
+  added only after reading every hit (§3).
+
 ## 8. SARIF / GitHub Security tab integration
 
 Bandit, Semgrep, Gitleaks, and both Trivy jobs upload SARIF results via
@@ -189,12 +237,14 @@ results from different tools don't overwrite each other in the
 repository's **Security → Code scanning alerts** tab. `security-events:
 write` is granted only on those specific jobs, not workflow-wide.
 
-pip-audit has no SARIF exporter, so its JSON report is uploaded as a
-workflow artifact instead (Actions → the run → **Artifacts**) — per the
-principle of retaining useful output when SARIF isn't available rather
-than dropping the finding. Bandit's SARIF and Trivy's SARIF are *also*
-uploaded as artifacts in addition to Code Scanning, for anyone who wants
-the raw file without going through the Security tab.
+pip-audit and the ZAP baseline scan (`dast-zap`) have no SARIF exporter,
+so their reports are uploaded as workflow artifacts instead (Actions →
+the run → **Artifacts** — `pip-audit-report` and `zap-report`
+respectively) — per the principle of retaining useful output when SARIF
+isn't available rather than dropping the finding. Bandit's SARIF and
+Trivy's SARIF are *also* uploaded as artifacts in addition to Code
+Scanning, for anyone who wants the raw file without going through the
+Security tab.
 
 **Prerequisite: GitHub code scanning must be enabled on the repository.**
 `upload-sarif` uploads to **Security → Code scanning alerts**, a GitHub
@@ -233,6 +283,7 @@ requirement for `main`. Recommended configuration (**Settings → Branches
 | `Secret Scan - Gitleaks` | **Required** | Zero tolerance — any match should block merge |
 | `Filesystem Scan - Trivy` | **Required** | Currently expected clean at CRITICAL/HIGH+fixable |
 | `Container Scan - Trivy (Docker image)` | **Required** | Same |
+| `DAST - OWASP ZAP Baseline` | **Required** (after first real run confirms `.zap/rules.tsv`, per §7a's note) | Only fails on the verified high-risk alert types in `.zap/rules.tsv` |
 
 Requiring the individual jobs (not just `security-gate`) gives clearer
 per-tool failure attribution directly in the PR checks list, at the cost
@@ -254,6 +305,7 @@ these checks passing) stays entirely in GitHub's normal PR flow.
 | pip-audit | Any known vulnerability | — | Binary signal; no filtering needed |
 | Gitleaks | Any match | — | Binary signal; zero tolerance for secrets |
 | Trivy (fs + image) | `CRITICAL`/`HIGH` **with a fix available** | `MEDIUM`/`LOW`, or unfixed findings | Blocking on unfixable findings has no remediation path |
+| ZAP baseline (DAST) | The high-risk alert types listed in `.zap/rules.tsv` (XSS, SQLi, command injection, path traversal, RFI) | Everything else (default `WARN`/`INFO`) | Conservative, individually-verified starter set — see §7a |
 
 **If a scanner finds something new:** treat it as a real regression to
 fix, not a config knob to loosen. If a finding is later confirmed to be a
@@ -318,6 +370,15 @@ docker run --rm -v "${PWD}:/repo" aquasec/trivy:latest fs --scanners vuln,miscon
 docker build -t football-hub:ci .
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
   image --scanners vuln,misconfig football-hub:ci
+
+# ZAP baseline (DAST) — requires Docker, and the app already running
+# locally (e.g. `python manage.py runserver` or `docker compose up`) on
+# port 8000. On Linux, --network host works as in CI; on macOS/Windows
+# Docker Desktop, use http://host.docker.internal:8000 as the target
+# instead and drop --network host.
+docker run --rm --network host -v "${PWD}:/zap/wrk:rw" \
+  -t ghcr.io/zaproxy/zaproxy:stable \
+  zap-baseline.py -t http://localhost:8000 -I -c /zap/wrk/.zap/rules.tsv
 ```
 
 **Local environment note (Windows):** if `pip-audit`/`bandit`/`docker
