@@ -32,3 +32,16 @@ htmlcov/
 
 # Logs
 *.log
+
+# Security pipeline: local scanner output (see docs/security.md §12).
+# CI writes these into an ephemeral runner workspace and uploads them as
+# workflow artifacts; a local run of the same commands would otherwise
+# leave these behind in the repo root.
+bandit-results.sarif
+semgrep-results.sarif
+pip-audit-results.json
+gitleaks-results.sarif
+trivy-*-results.sarif
+zap-report.json
+zap-report.html
+zap.yaml
