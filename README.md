@@ -47,6 +47,25 @@ HTMX) backed by PostgreSQL, with Redis powering real-time messaging.
 Django 5.2 · PostgreSQL · Django Channels / Daphne (WebSockets) · Redis ·
 Bootstrap 5 + HTMX · Docker Compose · pytest
 
+![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/-Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/-Bootstrap-7952B3?style=flat-square&logo=bootstrap&logoColor=white)
+![Docker](https://img.shields.io/badge/-Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/-Nginx-009639?style=flat-square&logo=nginx&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/-GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white)
+![Git](https://img.shields.io/badge/-Git-F05032?style=flat-square&logo=git&logoColor=white)
+![GitHub](https://img.shields.io/badge/-GitHub-181717?style=flat-square&logo=github&logoColor=white)
+
+**Security pipeline** ([docs/security.md](docs/security.md)):
+
+![OWASP ZAP](https://img.shields.io/badge/-OWASP_ZAP-000000?style=flat-square&logo=owasp&logoColor=white)
+![Bandit](https://img.shields.io/badge/-Bandit-1A1A1A?style=flat-square&logo=bandit&logoColor=white)
+![Semgrep](https://img.shields.io/badge/-Semgrep-0B7261?style=flat-square&logo=semgrep&logoColor=white)
+![Trivy](https://img.shields.io/badge/-Trivy-1904DA?style=flat-square&logo=trivy&logoColor=white)
+![Gitleaks](https://img.shields.io/badge/-Gitleaks-000000?style=flat-square&logo=gitleaks&logoColor=white)
+![pip-audit](https://img.shields.io/badge/-pip--audit-4B8BBE?style=flat-square&logo=pypi&logoColor=white)
+
 See [docs/architecture/technology-stack.md](docs/architecture/technology-stack.md)
 for the full, verified dependency list.
 
