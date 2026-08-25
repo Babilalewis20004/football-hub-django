@@ -4,8 +4,9 @@ This document describes `.github/workflows/security.yml` — the automated
 security pipeline that runs on every feature-branch push, every Pull
 Request targeting `main`, and every push to `main` (including merged PRs).
 It complements, and doesn't replace, the point-in-time manual reviews in
-`SECURITY_AUDIT_2026-08-10.md` and the CSP rollout notes in
-`docs/security/csp/`.
+`SECURITY_AUDIT_2026-08-10.md`, the external penetration test in
+`Football Hub - Django Web Penetration testing Report.docx` (August 2026),
+and the CSP rollout notes in `docs/security/csp/`.
 
 ## 1. When it runs
 
