@@ -90,7 +90,8 @@ I've also run manual penetration testing against a live deployment from a
 separate Kali Linux attack box — reconnaissance, enumeration, and
 vulnerability scanning (Nmap, Gobuster, Nikto, Nessus), followed by
 exploitation/verification and remediation with Metasploit, beyond what the
-automated scanners catch. See the full
+automated scanners catch. The target instance (`football-hub-test`) has
+since been decommissioned. See the full
 [penetration test report](<Football Hub - Django Web Penetration testing Report.docx>)
 and [manual security audit](SECURITY_AUDIT_2026-08-10.md).
 
