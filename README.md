@@ -69,6 +69,31 @@ Bootstrap 5 + HTMX · Docker Compose · pytest
 See [docs/architecture/technology-stack.md](docs/architecture/technology-stack.md)
 for the full, verified dependency list.
 
+## Security & CI/CD
+
+Every push runs through an automated security pipeline
+([docs/security.md](docs/security.md)):
+
+| Tool | Purpose |
+|---|---|
+| Bandit | Static analysis for common Python security issues |
+| Semgrep | Custom rule-based static analysis across the codebase |
+| Trivy | Container and dependency vulnerability scanning |
+| Gitleaks | Secrets detection to catch committed credentials before merge |
+| pip-audit | Known-CVE scanning of pinned Python dependencies |
+| OWASP ZAP | Dynamic application security testing (DAST) against the running app |
+
+The app is deployed via Docker Compose (nginx reverse proxy, Django/Gunicorn,
+Redis, PostgreSQL) on Ubuntu 24.04.
+
+I've also run manual penetration testing against a live deployment from a
+separate Kali Linux attack box — reconnaissance, enumeration, and
+vulnerability scanning (Nmap, Gobuster, Nikto, Nessus), followed by
+exploitation/verification and remediation with Metasploit, beyond what the
+automated scanners catch. See the full
+[penetration test report](<Football Hub - Django Web Penetration testing Report.docx>)
+and [manual security audit](SECURITY_AUDIT_2026-08-10.md).
+
 ## Architecture & database
 
 Design docs are written from the actual implementation (models, views, URLs,
@@ -163,6 +188,10 @@ for the full per-app breakdown of models, views, services, and URLs.
   UI documentation index
 - [docs/security.md](docs/security.md) — CI/CD security pipeline
   (SAST, dependency/secret/container scanning)
+- [SECURITY_AUDIT_2026-08-10.md](SECURITY_AUDIT_2026-08-10.md) —
+  point-in-time manual security audit
+- [Football Hub - Django Web Penetration testing Report.docx](<Football Hub - Django Web Penetration testing Report.docx>) —
+  external black-box penetration test (August 2026)
 - [TESTING.md](TESTING.md) — running the test suite
 
 ## Useful links
